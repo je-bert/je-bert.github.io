@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support the cause</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #18181c;
+      --border: rgba(255, 255, 255, 0.06);
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --glow: rgba(99, 102, 241, 0.25);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, var(--glow), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(99, 102, 241, 0.08), transparent);
+    }
+
+    main {
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    a.donate-btn {
+      display: block;
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      text-align: left;
+    }
+
+    a.donate-btn:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 8px 24px -8px var(--glow);
+      transform: translateY(-1px);
+    }
+
+    a.donate-btn:active {
+      transform: translateY(0);
+    }
+
+    .donate-btn .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .donate-btn .label {
+      display: block;
+    }
+
+    .donate-btn .price {
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .donate-btn .sublabel {
+      font-weight: 400;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+    }
+
+    .donate-btn.cheap .label { color: #86efac; }
+    .donate-btn.mid .label { color: #fcd34d; }
+    .donate-btn.big .label { color: #f472b6; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Support the cause</h1>
+    <p class="subtitle">Pick your level of chaos</p>
+
+    <div class="buttons">
+      <a href="https://donate.stripe.com/test_5kQfZh9MA5t80Ox4dE0Fi00" class="donate-btn cheap" target="_blank" rel="noopener">
+        <div class="row">
+          <span class="label">☕ A coffee</span>
+          <span class="price">$5 CAD</span>
+        </div>
+        <span class="sublabel">“I like you but I’m not sure yet”</span>
+      </a>
+      <a href="https://buy.stripe.com/test_28E9ATcYM08OfJreSi0Fi03" class="donate-btn mid" target="_blank" rel="noopener">
+        <div class="row">
+          <span class="label">🍕 A nice dinner</span>
+          <span class="price">$20 CAD</span>
+        </div>
+        <span class="sublabel">“We’re officially friends”</span>
+      </a>
+      <a href="https://buy.stripe.com/test_4gM3cv2k8dZEdBjbG60Fi04" class="donate-btn big" target="_blank" rel="noopener">
+        <div class="row">
+          <span class="label">🚀 A small yacht</span>
+          <span class="price">$50 CAD</span>
+        </div>
+        <span class="sublabel">“I believe in this. Take my money.”</span>
+      </a>
+    </div>
+  </main>
+</body>
+</html>
