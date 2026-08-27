@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RealSync — comparaison des polices</title>
+  <style>
+    :root {
+      --realsync-blue: #5ec5ff;
+      --realsync-navy: #05293b;
+      --ink: #0b0c0e;
+      --slate: #515b65;
+      --page: #edf3f6;
+      --paper: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 48px 0 64px;
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 28px;
+      padding-bottom: 22px;
+      border-bottom: 2px solid var(--realsync-blue);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--realsync-navy);
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 50px);
+      line-height: 0.98;
+      letter-spacing: -2px;
+    }
+
+    .intro {
+      max-width: 330px;
+      margin: 0;
+      color: var(--slate);
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .samples {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .font-card {
+      min-width: 0;
+      overflow: hidden;
+      background: var(--paper);
+      border: 1px solid rgba(5, 41, 59, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 14px 34px rgba(5, 41, 59, 0.06);
+    }
+
+    .font-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 0 18px;
+      background: linear-gradient(90deg, rgba(94, 197, 255, 0.18), rgba(94, 197, 255, 0));
+      border-bottom: 1px solid rgba(5, 41, 59, 0.07);
+    }
+
+    .font-name {
+      font-family: var(--sample-font);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .font-number {
+      color: #71808d;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .sample-frame {
+      min-height: 168px;
+      padding: 24px 20px 26px;
+      overflow-x: auto;
+    }
+
+    .signature {
+      width: max-content;
+      border-collapse: collapse;
+    }
+
+    .signature-photo {
+      display: block;
+      width: 118px;
+      height: 118px;
+      border: 0;
+      outline: none;
+    }
+
+    .signature-copy {
+      padding-left: 22px;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    .sample-type {
+      font-family: var(--sample-font);
+    }
+
+    .signature-name {
+      margin: 0 0 3px;
+      color: var(--ink);
+      font-size: 19px;
+      line-height: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      white-space: nowrap;
+    }
+
+    .signature-role {
+      margin: 0 0 7px;
+      color: var(--realsync-blue);
+      font-size: 9px;
+      line-height: 12px;
+      font-weight: 700;
+      letter-spacing: 1.55px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .signature-contact {
+      color: var(--slate);
+      font-size: 11px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .signature-contact a {
+      color: var(--slate);
+      text-decoration: none;
+    }
+
+    .signature-action {
+      margin-top: 8px;
+    }
+
+    .meeting-button {
+      display: inline-block;
+      padding: 7px 12px 7px 10px;
+      background: var(--realsync-blue);
+      border-radius: 999px;
+      color: var(--realsync-navy);
+      font-family: var(--sample-font);
+      font-size: 9.5px;
+      line-height: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .calendar-icon {
+      position: relative;
+      top: -1px;
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      margin: 0 4px 0 0;
+      border: 0;
+      vertical-align: middle;
+    }
+
+    .meeting-label {
+      vertical-align: middle;
+    }
+
+    @media (max-width: 840px) {
+      .header {
+        grid-template-columns: 1fr;
+      }
+
+      .intro {
+        max-width: 560px;
+        text-align: left;
+      }
+
+      .samples {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .page {
+        width: min(100% - 24px, 1180px);
+        padding-top: 28px;
+      }
+
+      .sample-frame {
+        padding-inline: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <p class="eyebrow">RealSync · Signature courriel</p>
+        <h1>La même signature.<br>Huit personnalités.</h1>
+      </div>
+      <p class="intro">Chaque essai reprend exactement la signature compacte de Jérémy avec sa photo. Seule la famille de caractères change.</p>
+    </div>
+
+    <div class="samples" id="samples" aria-label="Comparaison des huit polices">
+      <div class="font-card" data-font="Arial" style="--sample-font:Arial, Helvetica, sans-serif">
+        <div class="font-label">
+          <span class="font-name">Arial</span>
+          <span class="font-number">01 / 08</span>
+        </div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle">
+                <img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync">
+              </td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type">
+                  <a href="tel:+15813054755">(581) 305-4755</a><br>
+                  <a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a>
+                </div>
+                <div class="signature-action">
+                  <a class="meeting-button" href="https://cal.com/je-bert/virtual">
+                    <img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt="">
+                    <span class="meeting-label">Planifier une rencontre</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="font-card" data-font="Courier New" style="--sample-font:'Courier New', Courier, monospace">
+        <div class="font-label">
+          <span class="font-name">Courier New</span>
+          <span class="font-number">02 / 08</span>
+        </div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle"><img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync"></td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type"><a href="tel:+15813054755">(581) 305-4755</a><br><a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a></div>
+                <div class="signature-action"><a class="meeting-button" href="https://cal.com/je-bert/virtual"><img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt=""><span class="meeting-label">Planifier une rencontre</span></a></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="font-card" data-font="Georgia" style="--sample-font:Georgia, 'Times New Roman', serif">
+        <div class="font-label"><span class="font-name">Georgia</span><span class="font-number">03 / 08</span></div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle"><img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync"></td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type"><a href="tel:+15813054755">(581) 305-4755</a><br><a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a></div>
+                <div class="signature-action"><a class="meeting-button" href="https://cal.com/je-bert/virtual"><img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt=""><span class="meeting-label">Planifier une rencontre</span></a></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="font-card" data-font="Helvetica" style="--sample-font:Helvetica, Arial, sans-serif">
+        <div class="font-label"><span class="font-name">Helvetica</span><span class="font-number">04 / 08</span></div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle"><img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync"></td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type"><a href="tel:+15813054755">(581) 305-4755</a><br><a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a></div>
+                <div class="signature-action"><a class="meeting-button" href="https://cal.com/je-bert/virtual"><img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt=""><span class="meeting-label">Planifier une rencontre</span></a></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="font-card" data-font="Lucida Sans" style="--sample-font:'Lucida Sans', 'Lucida Grande', sans-serif">
+        <div class="font-label"><span class="font-name">Lucida Sans</span><span class="font-number">05 / 08</span></div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle"><img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync"></td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type"><a href="tel:+15813054755">(581) 305-4755</a><br><a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a></div>
+                <div class="signature-action"><a class="meeting-button" href="https://cal.com/je-bert/virtual"><img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt=""><span class="meeting-label">Planifier une rencontre</span></a></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="font-card" data-font="Tahoma" style="--sample-font:Tahoma, Geneva, sans-serif">
+        <div class="font-label"><span class="font-name">Tahoma</span><span class="font-number">06 / 08</span></div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle"><img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync"></td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type"><a href="tel:+15813054755">(581) 305-4755</a><br><a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a></div>
+                <div class="signature-action"><a class="meeting-button" href="https://cal.com/je-bert/virtual"><img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt=""><span class="meeting-label">Planifier une rencontre</span></a></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="font-card" data-font="Times New Roman" style="--sample-font:'Times New Roman', Times, serif">
+        <div class="font-label"><span class="font-name">Times New Roman</span><span class="font-number">07 / 08</span></div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle"><img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync"></td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type"><a href="tel:+15813054755">(581) 305-4755</a><br><a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a></div>
+                <div class="signature-action"><a class="meeting-button" href="https://cal.com/je-bert/virtual"><img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt=""><span class="meeting-label">Planifier une rencontre</span></a></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="font-card" data-font="Trebuchet MS" style="--sample-font:'Trebuchet MS', Arial, sans-serif">
+        <div class="font-label"><span class="font-name">Trebuchet MS</span><span class="font-number">08 / 08</span></div>
+        <div class="sample-frame">
+          <table class="signature" cellspacing="0" cellpadding="0" border="0" role="presentation">
+            <tr>
+              <td width="118" height="118" valign="middle"><img class="signature-photo" src="../assets/jeremie.png" width="118" height="118" alt="Jérémy Bertrand — RealSync"></td>
+              <td class="signature-copy" valign="middle">
+                <div class="signature-name sample-type">Jérémy Bertrand</div>
+                <div class="signature-role sample-type">Fondateur · Développeur</div>
+                <div class="signature-contact sample-type"><a href="tel:+15813054755">(581) 305-4755</a><br><a href="mailto:jeremie.bertrand@realsync.ca">jeremie.bertrand@realsync.ca</a></div>
+                <div class="signature-action"><a class="meeting-button" href="https://cal.com/je-bert/virtual"><img class="calendar-icon" src="../assets/calendar-outline.png" width="13" height="13" alt=""><span class="meeting-label">Planifier une rencontre</span></a></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
