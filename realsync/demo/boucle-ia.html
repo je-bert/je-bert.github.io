@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<title>Realsync</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Couleurs du site (realsync/app/globals.css). « lime » est le bleu d'accent. */
+  :root {
+    --ink: #0b0c0e; --fg: #f5f7fa; --muted: #9aa1ac; --lime: #5ec5ff; --cream: #f5f2ea; --ok: #2e9e5b;
+    /* Les logiciels sont clairs, comme les vrais. */
+    --app-bg: #ffffff; --app-bg-2: #f3f4f6; --app-line: #e2e5ea; --app-fg: #1f2329; --app-muted: #6b7280;
+    --outlook: #0f6cbd; --erp: #2f6f4e; --msgr: #0084ff; --garage: #b3541e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--ink); color: var(--fg);
+    font-family: Manrope, ui-sans-serif, system-ui, sans-serif; overflow: hidden; cursor: none; }
+
+  /* Scène fixe 1920×1080, mise à l'échelle pour remplir n'importe quel écran. */
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px;
+    transform-origin: center; transform: translate(-50%, -50%) scale(var(--s, 1)); }
+  .aurora { position: absolute; inset: -20%; background:
+    radial-gradient(60% 50% at 20% 30%, rgba(94,197,255,.16), transparent 60%),
+    radial-gradient(50% 45% at 80% 70%, rgba(42,134,201,.12), transparent 60%);
+    filter: blur(40px); animation: drift 30s ease-in-out infinite alternate; }
+  @keyframes drift { to { transform: translate(-4%, 3%) rotate(6deg); } }
+
+  /* Une fenêtre d'application : barre de titre, puis contenu clair. */
+  .win { position: absolute; top: 150px; height: 800px; border-radius: 14px; overflow: hidden;
+    background: var(--app-bg); color: var(--app-fg); font-family: Inter, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
+    opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+  .win.on { opacity: 1; transform: none; }
+  .win.left { left: 60px; width: 1010px; }
+  .win.right { left: 1110px; width: 750px; }
+  .titlebar { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 16px; color: #fff; font-size: 16px; font-weight: 600; }
+  .titlebar .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,.35); }
+  .titlebar .dot:first-child { background: #ff5f57; } .titlebar .dot:nth-child(2) { background: #febc2e; } .titlebar .dot:nth-child(3) { background: #28c840; }
+  .titlebar .name { margin-left: 12px; }
+  .body { display: flex; height: calc(100% - 46px); }
+  .main { flex: 1; position: relative; min-width: 0; }
+
+  /* Ce que l'IA retient se surligne. */
+  .hl { position: relative; padding: 1px 4px; margin: 0 -4px; border-radius: 4px; white-space: nowrap;
+    background: linear-gradient(90deg, rgba(94,197,255,.5), rgba(94,197,255,.5)) no-repeat; background-size: 0% 100%; transition: background-size .5s ease; }
+  .hl.on { background-size: 100% 100%; }
+  .hl.on::after { content: ""; position: absolute; right: -5px; top: -5px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--lime); box-shadow: 0 0 0 2px #fff; animation: pulse 1s ease-out 2; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(94,197,255,.7); } 100% { box-shadow: 0 0 0 14px rgba(94,197,255,0); } }
+
+  /* ================= Outlook : gaufre, recherche, ruban, rail, dossiers, liste, lecture ================= */
+  #inbox .titlebar { background: var(--outlook); }
+  #inbox .titlebar .waffle { width: 16px; height: 16px; background: radial-gradient(circle, #fff 1.6px, transparent 1.8px) 0 0 / 6px 6px; margin-right: 6px; }
+  #inbox .titlebar .ico { width: 30px; text-align: center; font-size: 17px; font-weight: 500; opacity: .95; }
+  #inbox .titlebar .search { margin-left: auto; margin-right: auto; width: 380px; height: 30px; border-radius: 6px; background: rgba(255,255,255,.92);
+    color: #6b7280; font-size: 14px; font-weight: 400; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+  #inbox .titlebar .me { width: 30px; height: 30px; border-radius: 50%; background: #fff; color: var(--outlook); font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+  .ribbon { display: flex; align-items: center; gap: 2px; height: 46px; padding: 0 14px; border-bottom: 1px solid var(--app-line); background: #fafafa; font-size: 14px; white-space: nowrap; overflow: hidden; }
+  .ribbon .tabs { display: flex; gap: 18px; margin-right: 18px; color: var(--app-muted); }
+  .ribbon .tabs b { color: var(--app-fg); font-weight: 600; border-bottom: 2px solid var(--outlook); padding-bottom: 2px; }
+  .ribbon .new { background: var(--outlook); color: #fff; padding: 7px 12px; border-radius: 6px; font-weight: 600; display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; flex: none; }
+  .ribbon .new i { font-style: normal; font-size: 11px; opacity: .9; }
+  .ribbon .sep { width: 1px; height: 24px; background: var(--app-line); margin: 0 6px; }
+  .ribbon .btn { padding: 6px 7px; border-radius: 6px; color: var(--app-fg); display: inline-flex; gap: 5px; align-items: center; font-size: 13px; white-space: nowrap; flex: none; }
+  .ribbon .btn i { font-style: normal; color: var(--app-muted); font-size: 11px; }
+  .ribbon .btn svg, .ribbon .new svg, .replies svg, .folders i svg, #mail .acts svg { vertical-align: -3px; }
+  .ribbon .btn svg { color: var(--outlook); }
+  #inbox .titlebar .search svg { color: var(--app-muted); }
+  #mail .acts i { font-style: normal; margin-left: 4px; }
+  .replies span { display: inline-flex; gap: 6px; align-items: center; }
+  #inbox .body { height: calc(100% - 46px - 46px); }
+  .rail { width: 44px; flex: none; background: #f0f2f5; border-right: 1px solid var(--app-line); display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 10px; }
+  .rail span { width: 32px; height: 32px; border-radius: 6px; display: grid; place-items: center; font-size: 15px; color: var(--app-muted); }
+  .rail span.cur { color: var(--outlook); background: #e6effa; position: relative; }
+  .rail span.cur::before { content: ""; position: absolute; left: -6px; top: 8px; width: 3px; height: 16px; border-radius: 2px; background: var(--outlook); }
+  .folders { width: 196px; flex: none; background: #f5f6f8; border-right: 1px solid var(--app-line); padding: 12px 0; font-size: 13px; white-space: nowrap; }
+  .folders .grp { padding: 8px 12px 4px; font-size: 12px; color: var(--app-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folders div.f { padding: 7px 12px 7px 20px; display: flex; justify-content: space-between; align-items: center; gap: 8px; overflow: hidden; }
+  .folders div.f i { font-style: normal; width: 18px; color: var(--app-muted); display: inline-flex; }
+  .folders div.cur i { color: var(--outlook); }
+  .folders div.f span { flex: 1; }
+  .folders div.f b { color: var(--outlook); font-weight: 600; }
+  .folders div.cur { background: #e6effa; font-weight: 600; border-left: 3px solid var(--outlook); padding-left: 19px; }
+  .list { width: 290px; flex: none; border-right: 1px solid var(--app-line); display: flex; flex-direction: column; }
+  .list .ltabs { display: flex; align-items: center; gap: 16px; padding: 12px 16px 8px; font-size: 14px; color: var(--app-muted); border-bottom: 1px solid var(--app-line); }
+  .list .ltabs b { color: var(--app-fg); font-weight: 600; border-bottom: 2px solid var(--outlook); padding-bottom: 6px; margin-bottom: -9px; }
+  .list .ltabs .flt { margin-left: auto; }
+  .list .day { padding: 8px 16px 4px; font-size: 12px; color: var(--app-muted); font-weight: 600; }
+  .mail-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 2px 10px; padding: 10px 16px 10px 12px; border-bottom: 1px solid #eef0f3;
+    font-size: 14px; opacity: 0; transform: translateX(-24px); transition: all .45s ease; position: relative; }
+  .mail-row.on { opacity: 1; transform: none; }
+  .mail-row .av { grid-row: 1 / span 3; width: 32px; height: 32px; border-radius: 50%; background: #d9e6f5; color: var(--outlook); font-weight: 700; font-size: 12px; display: grid; place-items: center; margin-top: 3px; }
+  .mail-row .who { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mail-row .when { color: var(--app-muted); font-size: 12px; }
+  .mail-row .subj { grid-column: 2 / -1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mail-row .prev { grid-column: 2 / -1; color: var(--app-muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mail-row.new { background: #eef5fc; }
+  .mail-row.new::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--outlook); }
+  .mail-row.new .who, .mail-row.new .subj { color: var(--outlook); }
+  .mail-row.new .when { color: var(--outlook); font-weight: 600; }
+  .mail-row.sel { background: #e6effa; }
+  .reading { flex: 1; position: relative; min-width: 0; }
+  .reading .empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--app-muted); font-size: 15px; text-align: center; }
+  .reading .empty i { display: block; font-size: 48px; font-style: normal; margin-bottom: 10px; opacity: .5; }
+  #mail { position: absolute; inset: 0; background: var(--app-bg); padding: 22px 26px; opacity: 0; transition: opacity .5s; }
+  #mail.on { opacity: 1; }
+  #mail .subj { font-size: 22px; font-weight: 700; margin: 0 0 14px; }
+  #mail .hdr { display: flex; gap: 12px; align-items: center; font-size: 14px; color: var(--app-muted); }
+  #mail .hdr .av { width: 40px; height: 40px; border-radius: 50%; background: #d9e6f5; color: var(--outlook); font-weight: 700; display: grid; place-items: center; font-size: 14px; }
+  #mail .hdr b { color: var(--app-fg); font-size: 16px; display: block; }
+  #mail .hdr .when { margin-left: auto; text-align: right; }
+  #mail .hdr .acts { color: var(--app-muted); font-size: 16px; }
+  #mail .to { font-size: 13px; color: var(--app-muted); margin: 6px 0 0 52px; padding-bottom: 14px; border-bottom: 1px solid var(--app-line); }
+  #mail p { font-size: 18px; line-height: 1.6; margin: 16px 0; }
+  #mail .sig { color: var(--app-muted); font-size: 15px; line-height: 1.45; }
+  .attach { display: inline-flex; gap: 12px; align-items: center; margin-top: 4px; padding: 10px 14px; border: 1px solid var(--app-line);
+    border-radius: 8px; font-size: 15px; background: var(--app-bg-2); transition: all .4s; }
+  .attach .ico { width: 28px; height: 34px; border-radius: 4px; background: #d93025; color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; }
+  .attach small { display: block; color: var(--app-muted); font-size: 13px; }
+  .attach .dl { margin-left: 8px; color: var(--app-muted); }
+  .attach.on { border-color: var(--lime); box-shadow: 0 0 0 5px rgba(94,197,255,.25); }
+  .replies { display: flex; gap: 10px; margin-top: 18px; }
+  .replies span { padding: 6px 12px; border: 1px solid var(--app-line); border-radius: 6px; font-size: 13px; }
+
+  /* Le croquis joint : une feuille avec le dessin coté. */
+  /* L'aperçu de pièce jointe d'Outlook : barre sombre, page blanche sur fond gris. */
+  #pdf { position: absolute; inset: 0; background: #525659; display: flex; flex-direction: column; opacity: 0; transition: opacity .45s ease; }
+  #pdf.on { opacity: 1; }
+  #pdf .pvbar { height: 44px; flex: none; background: #323639; color: #fff; display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 13px; white-space: nowrap; overflow: hidden; }
+  #pdf .pvbar svg { width: 16px; height: 16px; flex: none; }
+  #pdf .pvbar .fn { font-weight: 600; display: inline-flex; gap: 8px; align-items: center; flex: none; }
+  #pdf .pvbar .fn .ico { width: 16px; height: 20px; border-radius: 2px; background: #d93025; font-size: 7px; font-weight: 800; display: grid; place-items: center; }
+  #pdf .pvbar .acts { margin-left: auto; display: flex; gap: 12px; color: #ddd; align-items: center; flex: none; }
+  #pdf .pvbar .acts i { display: inline-flex; }
+  #pdf .pgs { flex: 1; overflow: hidden; padding: 14px 0; }
+  #pdf .page { position: relative; margin: 0 auto; width: 420px; height: 590px; background: #fff; color: #111; padding: 24px 28px; box-shadow: 0 6px 24px rgba(0,0,0,.45);
+    font-size: 13px; line-height: 1.45; transform: translateY(30px); transition: transform .5s cubic-bezier(.2,.8,.2,1); overflow: hidden; }
+  #pdf.on .page { transform: none; }
+  #pdf .lh { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 10px; }
+  #pdf .lh .co { font-weight: 800; font-size: 15px; letter-spacing: .04em; }
+  #pdf .lh .co small { display: block; font-weight: 400; font-size: 11px; color: #555; letter-spacing: 0; margin-top: 3px; }
+  #pdf .lh .dt { font-size: 11px; color: #555; text-align: right; white-space: nowrap; }
+  #pdf h4 { margin: 16px 0 4px; font-size: 14px; }
+  #pdf .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 12px; color: #333; margin: 8px 0 6px; }
+  #pdf .meta b { color: #777; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; display: block; }
+  #pdf svg { display: block; width: 100%; height: 215px; margin: 10px 0 0; }
+  #pdf .hand { font-family: "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive; color: #1a3a6b; font-size: 13px; }
+  #pdf .pfoot { position: absolute; left: 28px; right: 28px; bottom: 16px; display: flex; justify-content: space-between; font-size: 10px; color: #888; border-top: 1px solid #ddd; padding-top: 6px; }
+  #scan { position: absolute; left: 0; right: 0; top: -6px; height: 5px; background: var(--lime); box-shadow: 0 0 22px 6px rgba(94,197,255,.65); opacity: 0; }
+  #scan.on { opacity: 1; animation: scan 1.4s ease-in-out forwards; }
+  @keyframes scan { 0% { top: 0; opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+  /* ================= Systèmes de gestion (soumissions, atelier) ================= */
+  .side { display: none; }
+  .side div { padding: 10px 18px; }
+  .side div.cur { font-weight: 600; }
+  #order .titlebar { background: var(--erp); } #order .side div.cur { background: #e7f2ec; color: var(--erp); border-right: 3px solid var(--erp); }
+  #shop .titlebar { background: var(--garage); }
+  #svc .titlebar { background: #1f6f8b; } #shop .side div.cur { background: #fbeee4; color: var(--garage); border-right: 3px solid var(--garage); }
+  .crumb { padding: 14px 24px; font-size: 15px; color: var(--app-muted); border-bottom: 1px solid var(--app-line); }
+  .crumb b { color: var(--app-fg); font-weight: 600; }
+  .form { padding: 8px 24px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  .field { display: grid; grid-template-columns: 96px 1fr; gap: 8px; align-items: center; padding: 8px 0; font-size: 16px; }
+  .field.full { grid-column: 1 / -1; }
+  .field .k { color: var(--app-muted); font-size: 14px; }
+  .field .v { min-height: 38px; display: flex; align-items: center; padding: 0 12px; border: 1px solid var(--app-line); border-radius: 6px; background: #fbfbfc; font-weight: 500; white-space: nowrap; overflow: hidden; }
+  .field .v.typing { border-color: var(--erp); box-shadow: 0 0 0 3px rgba(47,111,78,.15); }
+  #shop .field .v.typing { border-color: var(--garage); box-shadow: 0 0 0 3px rgba(179,84,30,.15); }
+  .typing::after { content: "|"; color: var(--erp); animation: blink .8s steps(1) infinite; margin-left: 1px; }
+  .field .v.auto { color: var(--app-muted); }
+  @keyframes blink { 50% { opacity: 0; } }
+  .lines { margin: 10px 24px 0; border: 1px solid var(--app-line); border-radius: 8px; overflow: hidden; font-size: 16px; }
+  .lines .cap { position: static; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--app-muted); background: var(--app-bg-2); padding: 8px 12px; opacity: 1; transform: none; font-weight: 600; font-family: inherit; }
+  .lines table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .lines th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--app-muted); background: var(--app-bg-2); padding: 9px 12px; }
+  .lines td { padding: 10px 12px; border-top: 1px solid var(--app-line); height: 60px; vertical-align: middle; }
+  .lines td.r { white-space: nowrap; }
+  .lines .r { text-align: right; }
+  .lines td.typing { box-shadow: inset 0 0 0 2px rgba(47,111,78,.35); }
+  .lines .calc { display: block; font-size: 13px; color: var(--app-muted); margin-top: 3px; font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .4s; }
+  .lines .calc.on { opacity: 1; }
+  .lines .calc b { color: var(--erp); font-weight: 600; }
+  .total { display: flex; justify-content: flex-end; gap: 24px; padding: 14px 36px 0; font-size: 18px; align-items: baseline; }
+  .total b { font-size: 24px; }
+  .total .from { font-size: 13px; color: var(--app-muted); margin-right: auto; }
+  .cond { margin: 18px 24px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; font-size: 15px; opacity: 0; transition: opacity .5s; }
+  .cond.on { opacity: 1; }
+  .cond b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--app-muted); font-weight: 600; margin-bottom: 2px; }
+  .foot { position: absolute; left: 24px; right: 24px; bottom: 18px; display: flex; align-items: center; gap: 12px; font-size: 16px; color: var(--app-muted); }
+  .pill { padding: 6px 12px; border-radius: 999px; background: var(--app-bg-2); border: 1px solid var(--app-line); color: var(--app-fg); font-weight: 600; transition: all .4s; }
+  .pill.ok { background: #e7f2ec; border-color: #9fd0b4; color: var(--erp); }
+  .abtn { margin-left: auto; padding: 12px 26px; border-radius: 8px; background: var(--erp); color: #fff; font-size: 17px; font-weight: 600; opacity: 0; transform: scale(.96); transition: all .35s; }
+  .abtn.on { opacity: 1; transform: none; }
+  .abtn.pressed { transform: scale(.94); filter: brightness(1.15); }
+  .abtn.done { background: var(--ok); }
+  .chip { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #fbeee4; color: var(--garage); opacity: 0; transition: opacity .4s; }
+  .chip.on { opacity: 1; }
+  .chip.ok { background: #e7f2ec; color: var(--erp); }
+
+  /* ================= Messenger (messenger.com) : discussions, fil, infos ================= */
+  #msgr { background: #fff; }
+  #msgr .body { height: 100%; }
+  .mleft { width: 320px; flex: none; border-right: 1px solid #e4e6eb; display: flex; flex-direction: column; }
+  .mleft .h { display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px; }
+  .mleft .h b { font-size: 24px; font-weight: 700; flex: 1; }
+  .mleft .h i { width: 36px; height: 36px; border-radius: 50%; background: #f0f2f5; display: inline-grid; place-items: center; color: #050505; }
+  .mleft .srch { margin: 4px 16px 10px; height: 36px; border-radius: 18px; background: #f0f2f5; color: #65676b; font-size: 15px; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+  .mleft .srch svg { color: #65676b; }
+  .conv { display: grid; grid-template-columns: 56px 1fr auto; gap: 2px 12px; padding: 10px 12px; margin: 0 8px; border-radius: 10px; font-size: 15px; align-items: center; opacity: 0; transform: translateX(-24px); transition: all .45s ease; position: relative; }
+  .conv.on { opacity: 1; transform: none; }
+  .conv .av { grid-row: 1 / span 2; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 17px; position: relative; }
+  .conv .av::after { content: ""; position: absolute; right: 1px; bottom: 1px; width: 14px; height: 14px; border-radius: 50%; background: #31a24c; border: 2px solid #fff; }
+  .conv .who { font-weight: 500; color: #050505; }
+  .conv .when { color: #65676b; font-size: 12px; }
+  .conv .prev { grid-column: 2 / -1; color: #65676b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conv.new .who, .conv.new .prev { font-weight: 700; color: #050505; }
+  .conv.new .when::after { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #0866ff; margin-left: 10px; vertical-align: middle; }
+  .conv.sel { background: #f0f2f5; }
+  .chat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .chat .ch { display: flex; align-items: center; gap: 12px; padding: 10px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .chat .ch .av { width: 40px; height: 40px; border-radius: 50%; background: #b06ad6; color: #fff; font-weight: 700; display: grid; place-items: center; position: relative; }
+  .chat .ch .av::after { content: ""; position: absolute; right: 0; bottom: 0; width: 11px; height: 11px; border-radius: 50%; background: #31a24c; border: 2px solid #fff; }
+  .chat .ch b { display: block; font-size: 16px; color: #050505; } .chat .ch small { color: #65676b; font-size: 13px; }
+  .chat .ch .tools { margin-left: auto; display: flex; gap: 6px; }
+  .chat .ch .tools i { width: 36px; height: 36px; border-radius: 50%; display: inline-grid; place-items: center; color: #0866ff; }
+  .msgs { flex: 1; padding: 16px 16px 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; overflow: hidden; }
+  .msg { max-width: 70%; padding: 8px 12px; border-radius: 18px; font-size: 15px; line-height: 1.35; opacity: 0; transform: translateY(10px) scale(.98); transition: all .35s ease; }
+  .msg.on { opacity: 1; transform: none; }
+  .msg.in { align-self: flex-start; background: #f0f0f0; color: #050505; }
+  .msg.in .hl.on::after { box-shadow: 0 0 0 2px #f0f0f0; }
+  .msg.out { align-self: flex-end; background: linear-gradient(180deg, #0a7cff 0%, #5b5cff 60%, #a033ff 140%); color: #fff; }
+  .msg.out .hl { background-image: linear-gradient(90deg, rgba(255,255,255,.3), rgba(255,255,255,.3)); }
+  .msg.dots { padding: 10px 14px; display: inline-flex; gap: 5px; }
+  .msg.dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.9); animation: bounce 1s infinite; }
+  .msg.dots i:nth-child(2) { animation-delay: .15s; } .msg.dots i:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%, 60%, 100% { transform: none; } 30% { transform: translateY(-5px); } }
+  .tsep { align-self: center; font-size: 12px; color: #65676b; margin-bottom: 8px; }
+  .mrow { display: flex; gap: 8px; align-items: flex-end; align-self: flex-start; max-width: 80%; }
+  .mrow .mav { width: 28px; height: 28px; border-radius: 50%; background: #b06ad6; color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex: none; }
+  .mrow .msg { max-width: none; }
+  .compose { display: flex; align-items: center; gap: 12px; padding: 10px 16px 14px; color: #0866ff; }
+  .compose i { display: inline-flex; }
+  .compose .box { flex: 1; height: 36px; border-radius: 18px; background: #f0f2f5; color: #65676b; font-size: 15px; display: flex; align-items: center; padding: 0 14px; }
+  .details { width: 260px; flex: none; border-left: 1px solid #e4e6eb; padding: 22px 12px; font-size: 14px; text-align: center; overflow: hidden; }
+  .details .dav { width: 80px; height: 80px; border-radius: 50%; background: #b06ad6; color: #fff; font-weight: 700; font-size: 26px; display: grid; place-items: center; margin: 0 auto 8px; }
+  .details .dn { font-weight: 700; font-size: 17px; color: #050505; }
+  .details .dm { color: #65676b; font-size: 13px; margin-top: 2px; }
+  .details .acts { display: flex; justify-content: center; gap: 18px; margin: 16px 0 12px; }
+  .details .acts span { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: #050505; }
+  .details .acts i { width: 36px; height: 36px; border-radius: 50%; background: #f0f2f5; display: inline-grid; place-items: center; }
+  .details .sec { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px; font-weight: 600; color: #050505; text-align: left; border-radius: 8px; }
+  .details .sec i { font-style: normal; color: #65676b; }
+  .details .sub { text-align: left; padding: 6px 8px 10px 8px; color: #65676b; font-size: 13px; line-height: 1.5; }
+  .details .sub b { color: #050505; font-weight: 500; display: block; }
+  .details .sub .tag { display: inline-block; margin-top: 4px; padding: 3px 8px; border-radius: 6px; background: #e7f0ff; color: #0866ff; font-weight: 600; font-size: 12px; }
+
+  /* L'IA vérifie avant de répondre : une carte par-dessus le système, ligne par ligne. */
+  .check { position: absolute; left: 1110px; top: 150px; width: 750px; border-radius: 14px; background: var(--app-bg); color: var(--app-fg);
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif; box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
+    padding: 26px 30px 22px; opacity: 0; transform: translateY(24px); transition: all .5s ease; z-index: 3; }
+  .check.on { opacity: 1; transform: none; }
+  .check .t { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .check .t .ia { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #5ec5ff, #2a86c9); color: #fff; display: grid; place-items: center; }
+  .check .row { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--app-line); font-size: 16px;
+    opacity: 0; transform: translateX(-10px); transition: all .4s ease; }
+  .check .row.on { opacity: 1; transform: none; }
+  .check .st { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--app-line); border-top-color: var(--lime); animation: spin .8s linear infinite; margin-top: 2px; }
+  .check .row.ok .st { border: none; background: #e7f2ec; color: var(--erp); display: grid; place-items: center; animation: none; font-weight: 800; font-size: 14px; }
+  .check .row.ok .st::before { content: "✓"; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .check .q { color: var(--app-muted); font-size: 14px; }
+  .check .a { font-weight: 600; margin-top: 3px; opacity: 0; transition: opacity .4s; }
+  .check .row.ok .a { opacity: 1; }
+  .check .a b { color: var(--erp); }
+  .check .src { display: inline-flex; gap: 6px; align-items: center; margin-left: 8px; padding: 2px 8px; border-radius: 4px; background: var(--app-bg-2); color: var(--app-muted); font-size: 12px; font-weight: 500; }
+
+  /* ================= Quo : espace de travail, discussions, fil de l'appel ================= */
+  #quo { background: #fbfaf7; }
+  #quo .qtop { height: 46px; display: flex; align-items: center; padding: 0 16px; gap: 8px; }
+  #quo .qtop .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .qside { width: 200px; flex: none; padding: 4px 10px; font-size: 14px; color: var(--app-fg); }
+  .qside .g { padding: 14px 10px 6px; font-size: 12px; color: var(--app-muted); font-weight: 600; }
+  .qside div.q { padding: 8px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: center; }
+  .qside div.q i { display: inline-flex; color: var(--app-muted); }
+  .qside div.q.cur { background: #efede8; font-weight: 600; }
+  .qside .em { width: 18px; text-align: center; }
+  .qlist { width: 260px; flex: none; border-left: 1px solid #e8e6e0; border-right: 1px solid #e8e6e0; background: #fff; display: flex; flex-direction: column; }
+  .qlist .h { display: flex; gap: 16px; padding: 12px 16px 6px; font-size: 16px; }
+  .qlist .h b { font-weight: 700; } .qlist .h span { color: var(--app-muted); }
+  .qlist .chips { display: flex; gap: 8px; padding: 4px 12px 10px; }
+  .qlist .chips span { padding: 5px 10px; border-radius: 8px; background: #f2f1ee; font-size: 13px; font-weight: 600; }
+  .qlist .chips span.cur { background: #e7f0ff; color: #1a5cff; }
+  .qrow { display: grid; grid-template-columns: 44px 1fr auto; gap: 2px 10px; padding: 10px 12px; margin: 0 6px; border-radius: 10px; font-size: 14px; align-items: center; opacity: 0; transform: translateX(-16px); transition: all .4s; }
+  .qrow.on { opacity: 1; transform: none; }
+  .qrow.sel { background: #f2f1ee; }
+  .qrow .av { grid-row: 1 / span 2; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .qrow .who { font-weight: 600; } .qrow .when { color: var(--app-muted); font-size: 12px; }
+  .qrow .prev { grid-column: 2 / -1; color: var(--app-muted); font-size: 13px; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; }
+  .qrow .prev i { display: inline-flex; color: #21a366; }
+  .qthread { flex: 1; min-width: 0; background: #fff; display: flex; flex-direction: column; }
+  .qth { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #e8e6e0; }
+  .qth .av { width: 40px; height: 40px; border-radius: 50%; background: #e8e6f8; color: #5b4bdb; font-weight: 700; display: grid; place-items: center; }
+  .qth b { display: block; font-size: 16px; } .qth small { color: var(--app-muted); font-size: 13px; }
+  .qth .tools { margin-left: auto; display: flex; gap: 16px; color: var(--app-fg); }
+  .qth .tools i { display: inline-flex; }
+  .qmsgs { flex: 1; padding: 14px 18px 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; overflow: hidden; }
+  .qcard { align-self: flex-start; display: none; gap: 12px; align-items: flex-start; max-width: 92%; }
+  .qcard.on { display: flex; animation: fadeup .4s ease both; }
+  @keyframes fadeup { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .qcard .cav { width: 34px; height: 34px; border-radius: 50%; background: #e8e6f8; color: #5b4bdb; font-weight: 700; font-size: 12px; display: grid; place-items: center; flex: none; margin-top: 4px; }
+  .qcall { background: #f2f1ee; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
+  .qcall .l1 { display: flex; gap: 12px; align-items: center; }
+  .qcall .ico { width: 38px; height: 38px; border-radius: 50%; background: #21a366; color: #fff; display: grid; place-items: center; }
+  .qcall .ico.grey { background: #8a8a8a; }
+  .qcall b { display: block; font-size: 15px; } .qcall small { color: var(--app-muted); font-size: 13px; }
+  .qcall .timer { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; color: #e0245e; display: flex; gap: 8px; align-items: center; }
+  .qcall .timer::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #e0245e; animation: rec 1s infinite; }
+  @keyframes rec { 50% { opacity: .3; } }
+  .qcall .player { display: none; align-items: center; gap: 10px; background: #e9e8e3; border-radius: 10px; padding: 8px 12px; font-size: 13px; color: var(--app-fg); }
+  .qcall .player .bar { flex: 1; height: 4px; border-radius: 2px; background: #cfcdc6; position: relative; }
+  .qcall .player .bar::before { content: ""; position: absolute; left: 0; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .qcall.ended .player { display: flex; } .qcall.ended .timer { display: none; }
+  .qtr { background: #fff; border: 1px solid #e8e6e0; border-radius: 16px; padding: 12px 16px; font-size: 14px; max-width: 100%; }
+  .qtr .h { font-weight: 700; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
+  .qtr .h .live { font-size: 11px; font-weight: 700; color: #e0245e; background: #fdecf2; padding: 2px 8px; border-radius: 999px; }
+  .tl { display: grid; grid-template-columns: 38px 1fr; gap: 10px; padding: 3px 0; font-size: 13.5px; line-height: 1.45; opacity: 0; transform: translateY(6px); transition: all .3s; }
+  .tl.on { opacity: 1; transform: none; }
+  .tl .t { color: var(--app-muted); font-variant-numeric: tabular-nums; }
+  .tl b { font-weight: 600; }
+  .qsum { background: #fff; border: 1px solid #e8e6e0; border-radius: 16px; padding: 12px 16px; font-size: 14px; }
+  .qsum .h { font-weight: 700; display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; }
+  .qsum .h span { color: #7c5cff; font-weight: 500; font-size: 13px; }
+  .qsum ul { margin: 4px 0; padding-left: 18px; line-height: 1.55; }
+  .qsum li::marker { color: #7c5cff; }
+  .qsum .ns { font-weight: 700; margin-top: 8px; }
+  .qmsg { max-width: 78%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.45; display: none; }
+  .qmsg.on { display: block; animation: fadeup .35s ease both; }
+  .qmsg.out { align-self: flex-end; background: #1a5cff; color: #fff; border-bottom-right-radius: 6px; }
+  .qmsg.in { align-self: flex-start; background: #f2f1ee; color: #111; border-bottom-left-radius: 6px; }
+  .qcompose { margin: 10px 18px 14px; border: 1px solid #e8e6e0; border-radius: 12px; padding: 12px 14px; font-size: 15px; color: var(--app-muted); }
+  .qcompose .ic { display: flex; gap: 14px; margin-top: 10px; color: var(--app-fg); }
+  .qcompose .ic i { display: inline-flex; } .qcompose .ic .send { margin-left: auto; color: #cfcdc6; }
+
+  /* Curseur humain */
+  #cursor { position: absolute; left: 1500px; top: 1200px; width: 30px; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6));
+    transition: left .9s cubic-bezier(.4,0,.2,1), top .9s cubic-bezier(.4,0,.2,1); z-index: 5; }
+
+  /* La réponse au client, dans Outlook aussi. */
+  #confirm .titlebar { background: var(--outlook); }
+  #confirm .c { padding: 22px 30px 26px; }
+  #confirm .to { font-size: 16px; color: var(--app-muted); padding: 8px 0; border-bottom: 1px solid var(--app-line); }
+  #confirm .to b { color: var(--app-fg); font-weight: 500; }
+  #confirm p { font-size: 18px; line-height: 1.55; margin: 14px 0 10px; }
+  #confirm p.small { font-size: 14px; color: var(--app-muted); margin: 8px 0 14px; }
+  #confirm p.sig { color: var(--app-muted); font-size: 15px; margin: 12px 0 8px; }
+  #confirm .cta { display: inline-block; margin-top: 6px; padding: 12px 22px; border-radius: 8px; background: var(--erp); color: #fff; font-weight: 600; font-size: 16px; }
+  .sent { display: inline-flex; gap: 8px; align-items: center; margin-top: 16px; padding: 8px 14px; border-radius: 999px; background: #e7f2ec; color: var(--erp); font-weight: 600; font-size: 15px; }
+  .win.short { height: auto; }
+
+  /* Bandeaux texte, dans la voix du site. */
+  .cap { position: absolute; left: 80px; top: 48px; font-size: 64px; font-weight: 800; letter-spacing: -.01em; opacity: 0; transform: translateY(-10px); transition: all .5s ease; }
+  .cap.on { opacity: 1; transform: none; }
+  .cap em { font-style: normal; color: var(--lime); }
+
+  /* Signature permanente, en bas à droite : on sait qui a branché ça. */
+  .marque { position: absolute; right: 80px; bottom: 44px; opacity: .92; }
+  .chip .rs { margin-left: 6px; vertical-align: -6px; }
+  .chip:has(.rs) { padding: 4px 12px; font-size: 14px; }
+
+  /* Carte finale : la phrase, le QR au centre. */
+  #end { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; background: var(--ink); opacity: 0; transition: opacity .7s ease; z-index: 10; }
+  #end.on { opacity: 1; }
+  #end .eyebrow { color: var(--lime); font-size: 22px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+  #end h1 { font-size: 60px; line-height: 1.1; margin: 22px 0 44px; white-space: nowrap; letter-spacing: -.02em; font-weight: 800; }
+  #end { cursor: auto; }
+  #end .qr { display: block; width: 340px; height: 340px; padding: 16px; border-radius: 24px; background: var(--cream); margin: 0 auto; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+  #end .qr:hover { transform: scale(1.03); box-shadow: 0 0 0 6px rgba(94,197,255,.35); }
+  #end .hint { margin-top: 22px; font-size: 20px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="aurora"></div>
+  <div class="cap" id="cap"></div>
+  <div class="marque" data-rs="#f5f7fa,40"></div>
+
+  <!-- ===== Séquence 1 : Outlook ===== -->
+  <section class="win left" id="inbox">
+    <div class="titlebar"><span class="waffle"></span><span class="name">Outlook</span>
+      <span class="search" data-ico="search">Rechercher</span><span class="ico" data-ico="gear" data-size="18"></span><span class="ico" data-ico="help" data-size="18"></span><span class="me">JB</span></div>
+    <div class="ribbon">
+      <span class="tabs"><b>Accueil</b><span>Affichage</span><span>Aide</span></span>
+      <span class="new" data-ico="mail">Nouveau courrier <i>▾</i></span>
+      <span class="sep"></span>
+      <span class="btn" data-ico="trash">Supprimer</span><span class="btn" data-ico="archive">Archiver</span><span class="btn" data-ico="flag">Signaler <i>▾</i></span><span class="btn" data-ico="folder">Déplacer vers <i>▾</i></span>
+      <span class="sep"></span>
+      <span class="btn" data-ico="reply">Répondre</span>
+    </div>
+    <div class="body">
+      <div class="rail"><span class="cur" data-ico="mail" data-size="18"></span><span data-ico="calendar" data-size="18"></span><span data-ico="people" data-size="18"></span><span data-ico="check" data-size="18"></span><span data-ico="apps" data-size="18"></span></div>
+      <div class="folders">
+        <div class="grp">⌄ Favoris</div>
+        <div class="f cur"><i data-ico="inbox" data-size="15"></i><span>Boîte de réception</span><b id="unread">3</b></div>
+        <div class="f"><i data-ico="sent" data-size="15"></i><span>Éléments envoyés</span></div>
+        <div class="f"><i data-ico="drafts" data-size="15"></i><span>Brouillons</span><span style="flex:0;color:var(--app-muted)">2</span></div>
+        <div class="grp">⌄ soumissions@entreprise.ca</div>
+        <div class="f"><i data-ico="inbox" data-size="15"></i><span>Boîte de réception</span></div>
+        <div class="f"><i data-ico="junk" data-size="15"></i><span>Courrier indésirable</span></div>
+        <div class="f"><i data-ico="drafts" data-size="15"></i><span>Brouillons</span></div>
+        <div class="f"><i data-ico="sent" data-size="15"></i><span>Éléments envoyés</span></div>
+        <div class="f"><i data-ico="trash" data-size="15"></i><span>Éléments supprimés</span></div>
+        <div class="f"><i data-ico="archive" data-size="15"></i><span>Archive</span></div>
+        <div class="f"><i data-ico="note" data-size="15"></i><span>Notes</span></div>
+      </div>
+      <div class="list">
+        <div class="ltabs"><b>Prioritaire</b><span>Autres</span><span class="flt">Filtrer ▾</span></div>
+        <div class="day">Aujourd'hui</div>
+        <div id="rows"></div>
+      </div>
+      <div class="reading">
+        <div class="empty"><i>✉</i>Sélectionnez un élément à lire</div>
+        <div id="mail">
+          <h2 class="subj">Soumission, toiles pour le chantier de Baie-Comeau</h2>
+          <div class="hdr"><span class="av">MT</span><div><b>Marc Tremblay</b>marc@toiturestremblay.ca</div>
+            <span class="when">mer. 2026-09-10 7 h 42<br><span class="acts"><i data-ico="reply"></i> <i data-ico="replyall"></i> <i data-ico="forward"></i> …</span></span></div>
+          <div class="to">À : soumissions@votre-entreprise.ca</div>
+          <p>Salut, j'aurais besoin d'une soumission pour <span class="hl" id="e-qty">6 toiles</span> en
+            <span class="hl" id="e-mat">PVC 18 oz, comme la dernière fois</span>. Les dimensions sont dans le croquis ci-joint.
+            Il me les faudrait pour le <span class="hl" id="e-date">18 septembre</span>.</p>
+          <p class="sig">Merci!<br>Marc Tremblay, propriétaire<br>Toitures Tremblay inc. · 418 296-4410</p>
+          <div class="attach" id="attach"><span class="ico">PDF</span><span>croquis-toiles-baie-comeau.pdf<small>212 Ko</small></span><span class="dl">⌄</span></div>
+          <div class="replies"><span data-ico="reply">Répondre</span><span data-ico="forward">Transférer</span></div>
+
+          <div id="pdf">
+            <div class="pvbar"><span class="fn"><span class="ico">PDF</span>croquis-toiles-baie-comeau.pdf</span>
+              <span class="acts"><i data-ico="search"></i><span>1 / 1</span><span>Télécharger</span><span>✕</span></span></div>
+            <div class="pgs"><div class="page">
+              <div class="lh"><div class="co">TOITURES TREMBLAY INC.<small>1450, boul. Industriel, Baie-Comeau (Québec)<br>418 296-4410 · info@toiturestremblay.ca</small></div><div class="dt">10 septembre 2026<br>Réf. BC-26-118</div></div>
+              <h4>Croquis, toiles pour le chantier de Baie-Comeau</h4>
+              <div class="meta">
+                <div><b>Quantité</b>6 toiles identiques</div><div><b>Matériel</b>PVC 18 oz, comme la commande de mars 2025</div>
+                <div><b>Finition</b>Ourlet renforcé tout le tour</div><div><b>Livraison</b>18 septembre, à l'atelier</div>
+              </div>
+              <svg viewBox="0 0 800 280" font-family="Inter, sans-serif">
+                <rect x="120" y="40" width="540" height="190" fill="#fff" stroke="#111" stroke-width="2.5"/>
+                <g stroke="#111" stroke-width="1.5">
+                  <line x1="120" y1="258" x2="660" y2="258"/><line x1="120" y1="250" x2="120" y2="266"/><line x1="660" y1="250" x2="660" y2="266"/>
+                  <line x1="700" y1="40" x2="700" y2="230"/><line x1="692" y1="40" x2="708" y2="40"/><line x1="692" y1="230" x2="708" y2="230"/>
+                </g>
+                <rect id="d-w" x="325" y="262" width="130" height="18" rx="4" fill="rgba(94,197,255,0)"/>
+                <text x="390" y="278" text-anchor="middle" font-size="22" font-weight="700" fill="#111">4 200 mm</text>
+                <rect id="d-h" x="712" y="120" width="88" height="28" rx="4" fill="rgba(94,197,255,0)"/>
+                <text x="756" y="141" text-anchor="middle" font-size="22" font-weight="700" fill="#111">3 100 mm</text>
+                <text x="390" y="128" text-anchor="middle" font-size="24" fill="#333" font-weight="600">Toile PVC 18 oz</text>
+                <text x="390" y="162" text-anchor="middle" font-size="19" fill="#555">× 6, identiques</text>
+                <text x="130" y="28" font-size="19" fill="#1a3a6b" font-style="italic" font-family="Bradley Hand, Segoe Print, Comic Sans MS, cursive">ourlet renforcé ↓</text>
+              </svg>
+              <p class="hand" style="margin:10px 0 0">→ même modèle que la dernière fois, merci! Marc</p>
+              <div class="meta" style="margin-top:14px;border-top:1px solid #ddd;padding-top:10px"><div><b>Contact chantier</b>Marc Tremblay · 418 296-4410</div><div><b>Facturation</b>Net 30 jours</div></div>
+              <div class="pfoot"><span>Toitures Tremblay inc. · RBQ 5678-1234-01</span><span>Page 1 de 1</span></div>
+              <div id="scan"></div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="win right" id="order">
+    <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">Votre système · Soumissions</span></div>
+    <div class="body">
+      <div class="side"><div>Tableau de bord</div><div class="cur">Soumissions</div><div>Commandes</div><div>Clients</div><div>Production</div><div>Facturation</div></div>
+      <div class="main">
+        <div class="crumb">Soumissions › <b>Nouvelle soumission</b><span class="chip on" style="float:right">Branché par <span data-rs="#1f2329,20"></span></span></div>
+        <div class="form">
+          <div class="field"><span class="k">No</span><span class="v auto" id="f-no"></span></div>
+          <div class="field"><span class="k">Client</span><span class="v" id="f-client"></span></div>
+          <div class="field"><span class="k">Projet</span><span class="v" id="f-proj"></span></div>
+          <div class="field"><span class="k">Date requise</span><span class="v" id="f-date"></span></div>
+        </div>
+        <div class="lines"><table>
+          <tr><th>Description</th><th class="r" style="width:15%">Qté</th><th class="r" style="width:22%">Montant</th></tr>
+          <tr><td><span id="l1-desc"></span><span class="calc" id="l1-calc">4,2 m × 3,1 m = <b>13,02 m²</b> × 6 toiles = <b>78,12 m²</b> × 24,50 $/m², le prix de sa dernière commande</span></td><td class="r" id="l1-qty"></td><td class="r" id="l1-price"></td></tr>
+        </table></div>
+        <div class="total" id="total"></div>
+        <div class="cond" id="cond">
+          <div><b>Livraison</b>18 septembre 2026, à l'atelier</div>
+          <div><b>Validité</b>30 jours</div>
+          <div><b>Paiement</b>Net 30, comme le compte client</div>
+          <div><b>Production</b>5 jours ouvrables, matériel en stock</div>
+        </div>
+        <div class="foot">Statut <span class="pill" id="pill">Brouillon</span><span class="abtn" id="approve">Envoyer la soumission</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="win right short" id="confirm">
+    <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">Outlook · Éléments envoyés</span></div>
+    <div class="c">
+      <div class="to">À : <b>Marc Tremblay &lt;marc@toiturestremblay.ca&gt;</b></div>
+      <div class="to">Objet : <b>Re : Soumission, toiles pour le chantier de Baie-Comeau</b></div>
+      <p>Bonjour Marc,</p>
+      <p>Voici la soumission pour vos 6 toiles PVC 18 oz de 4,2 m × 3,1 m, ourlet renforcé, même modèle que la dernière fois : <b>1 913,94 $</b> avant taxes. Prêtes pour le <b>18 septembre</b>, à l'atelier.</p>
+      <div class="cta">Accepter la soumission</div>
+      <p class="small">Un clic, et on lance la production. Valide 30 jours.</p>
+      <div class="attach"><span class="ico">PDF</span><span>Soumission-2026-0912-Toitures-Tremblay.pdf<small>96 Ko</small></span></div>
+      <p class="sig">Merci Marc!<br>Éric, service des soumissions</p>
+      <div><span class="sent">✓ Envoyé à 7 h 44, après ton approbation</span></div>
+    </div>
+  </div>
+
+  <!-- ===== Séquence 2 : un garage, sur Messenger ===== -->
+  <section class="win left" id="msgr">
+    <div class="body">
+      <div class="mleft">
+        <div class="h"><b>Discussions</b><i>…</i><i data-ico="drafts" data-size="16"></i></div>
+        <div class="srch" data-ico="search">Rechercher dans Messenger</div>
+        <div id="convs"></div>
+      </div>
+      <div class="chat">
+        <div class="ch"><span class="av">MF</span><div><b>Mélanie Fortin</b><small>Active il y a 2 min</small></div>
+          <span class="tools"><i data-ico="phone" data-size="20"></i><i data-ico="video" data-size="20"></i><i data-ico="info" data-size="20"></i></span></div>
+        <div class="msgs" id="msgs"><div class="tsep">9:12</div></div>
+        <div class="compose"><i data-ico="plus" data-size="20"></i><i data-ico="image" data-size="20"></i><i data-ico="smile" data-size="20"></i><i data-ico="doc" data-size="20"></i><span class="box">Aa</span><i data-ico="thumb" data-size="20"></i></div>
+      </div>
+      <div class="details">
+        <div class="dav">MF</div>
+        <div class="dn">Mélanie Fortin</div>
+        <div class="dm">Active il y a 2 min</div>
+        <div class="acts"><span><i data-ico="people" data-size="16"></i>Profil</span><span><i data-ico="megaphone" data-size="16"></i>Sourdine</span><span><i data-ico="search" data-size="16"></i>Rechercher</span></div>
+        <div class="sec">Infos sur la discussion <i>⌃</i></div>
+        <div class="sub"><b>418 555-0192</b>Alma, QC<br><b>Honda CR-V 2021</b><span id="d-rdv">Aucun rendez-vous</span><br><span class="tag">Pneus</span> <span class="tag">Cliente</span></div>
+        <div class="sec">Personnaliser la discussion <i>⌄</i></div>
+        <div class="sec">Fichiers multimédias et fichiers <i>⌄</i></div>
+        <div class="sec">Confidentialité et assistance <i>⌄</i></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="win right" id="shop">
+    <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">Votre système · Atelier</span></div>
+    <div class="body">
+      <div class="side"><div>Tableau de bord</div><div class="cur">Rendez-vous</div><div>Bons de travail</div><div>Pièces</div><div>Clients</div><div>Facturation</div></div>
+      <div class="main">
+        <div class="crumb">Rendez-vous › <b>Jeudi 17 septembre, 9 h 00</b></div>
+        <div class="form">
+          <div class="field"><span class="k">Client</span><span class="v" id="g-client"></span></div>
+          <div class="field"><span class="k">Cellulaire</span><span class="v" id="g-tel"></span></div>
+          <div class="field"><span class="k">Véhicule</span><span class="v" id="g-car"></span></div>
+          <div class="field"><span class="k">Pneus</span><span class="v" id="g-km"></span></div>
+          <div class="field full"><span class="k">Demande</span><span class="v" id="g-pb"></span></div>
+        </div>
+        <div class="lines">
+          <div class="cap">Travaux prévus</div>
+          <table>
+            <tr><td id="w1"></td><td class="r" style="width:16%" id="w1t"></td><td class="r" style="width:20%" id="w1p"></td></tr>
+            <tr><td id="w2"></td><td class="r" style="width:16%" id="w2t"></td><td class="r" style="width:20%" id="w2p"></td></tr>
+          </table>
+        </div>
+        <div class="lines">
+          <div class="cap">Suivi automatique</div>
+          <table>
+            <tr><td id="p1"></td><td class="r" style="width:34%"><span class="chip" id="p1s">⏳ Programmé</span></td></tr>
+          </table>
+        </div>
+        <div class="foot">Statut <span class="pill" id="g-pill">Nouveau</span><span class="chip on" style="margin-left:auto" id="g-src">Branché par <span data-rs="#1f2329,20"></span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Séquence 3 : un appel, dans Quo ===== -->
+  <section class="win left" id="quo">
+    <div class="qtop"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span></div>
+    <div class="body" style="height: calc(100% - 46px)">
+      <div class="qside">
+        <div class="q"><i data-ico="search"></i>Rechercher</div>
+        <div class="q"><i data-ico="bolt"></i>Activité</div>
+        <div class="g">Votre espace</div>
+        <div class="q"><i data-ico="people"></i>Contacts</div>
+        <div class="q"><i data-ico="chart"></i>Analyses</div>
+        <div class="g">Boîtes de réception</div>
+        <div class="q cur"><span class="em">🔧</span>Plomberie Girard</div>
+        <div class="q"><span class="em">🧾</span>Facturation</div>
+        <div class="g">Messages directs</div>
+        <div class="q"><i data-ico="people"></i>Éric Girard <small style="color:var(--app-muted)">Vous</small></div>
+        <div class="q"><i data-ico="people"></i>Mathieu Bergeron</div>
+      </div>
+      <div class="qlist">
+        <div class="h"><b>Discussions</b><span>Appels</span></div>
+        <div class="chips"><span class="cur">Ouverts ▾</span><span>Non lus</span><span>Filtrer</span></div>
+        <div id="qrows"></div>
+      </div>
+      <div class="qthread">
+        <div class="qth"><span class="av" id="q-av">?</span><div><b id="q-name">418 555-0187</b><small id="q-sub">Alma, QC</small></div>
+          <span class="tools"><i data-ico="phone" data-size="18"></i><i data-ico="check" data-size="18"></i><i data-ico="search" data-size="18"></i><i>…</i></span></div>
+        <div class="qmsgs" id="qmsgs">
+          <div class="tsep">Aujourd'hui, 9 h 12</div>
+          <div class="qcard" id="q-callcard"><span class="cav" id="q-cav">?</span>
+            <div class="qcall" id="q-call">
+              <div class="l1"><span class="ico" data-ico="phone"></span><div><b id="q-ct">Appel entrant…</b><small id="q-cs">Pas encore répondu</small></div><span class="timer" id="q-timer">00:00</span></div>
+              <div class="player">▶<span class="bar"></span>0:31<i data-ico="megaphone" data-size="14"></i>1x</div>
+            </div></div>
+          <div class="qcard" id="q-trcard"><span class="cav" style="visibility:hidden"></span>
+            <div class="qtr"><div class="h">Transcription <span class="live" id="q-live">● EN DIRECT</span></div><div id="q-lines"></div></div></div>
+          <div class="qcard" id="q-sumcard"><span class="cav" style="visibility:hidden"></span>
+            <div class="qsum" id="q-sum"><div class="h">Résumé de l'appel <span>Propulsé par Quo AI ✨</span></div>
+              <ul><li><b>Line Gagnon</b> appelle : son chauffe-eau 40 gal électrique de 12 ans coule dans le sous-sol.</li><li>Elle habite au 245 rue des Érables, à Alma.</li></ul>
+              <div class="ns">Prochaines étapes</div>
+              <ul><li>Envoyer un prix par texto.</li><li>Planifier la visite demain matin.</li></ul>
+            </div></div>
+          <div class="qmsg out" id="q-sms">Bonjour Mme Gagnon, suite à votre appel : remplacement du chauffe-eau 40 gal électrique, 1 395 $ + taxes, installé demain à 8 h. Répondez OUI pour confirmer. Plomberie Girard</div>
+          <div class="qmsg in" id="q-ans">OUI merci!! 🙏</div>
+        </div>
+        <div class="qcompose">Écrire un message…<div class="ic"><i data-ico="doc" data-size="16"></i><i data-ico="image" data-size="16"></i><i data-ico="smile" data-size="16"></i><i class="send" data-ico="sent" data-size="18"></i></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="win right" id="svc">
+    <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">Votre système · Service</span></div>
+    <div class="body">
+      <div class="main">
+        <div class="crumb">Demandes › <b>Nouvelle demande, depuis un appel</b></div>
+        <div class="form">
+          <div class="field"><span class="k">Client</span><span class="v" id="s-client"></span></div>
+          <div class="field"><span class="k">Téléphone</span><span class="v" id="s-tel"></span></div>
+          <div class="field full"><span class="k">Adresse</span><span class="v" id="s-addr"></span></div>
+          <div class="field full"><span class="k">Demande</span><span class="v" id="s-req"></span></div>
+          <div class="field"><span class="k">Priorité</span><span class="v" id="s-prio"></span></div>
+          <div class="field"><span class="k">Visite</span><span class="v" id="s-when"></span></div>
+        </div>
+        <div class="lines">
+          <div class="cap">Soumission proposée</div>
+          <table>
+            <tr><td><span id="s-l1"></span><span class="calc" id="s-calc">Prix de la liste 2026, installation et récupération de l'ancien inclus</span></td><td class="r" style="width:26%" id="s-p1"></td></tr>
+          </table>
+        </div>
+        <div class="cond" id="s-cond">
+          <div><b>Texto</b>Envoyé par Quo, avec le prix et l'heure</div>
+          <div><b>Confirmation</b><span id="s-conf">En attente de la cliente</span></div>
+          <div><b>Camion</b>No 2, Alma, départ 7 h 30</div>
+          <div><b>Pièce</b>Chauffe-eau 40 gal électrique, en stock</div>
+        </div>
+        <div class="foot">Statut <span class="pill" id="s-pill">Nouvelle</span><span class="chip on" style="margin-left:auto">Branché par <span data-rs="#1f2329,20"></span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vérifications de l'IA, séquence 3 -->
+  <div class="check" id="check3">
+    <div class="t"><span class="ia" data-ico="bolt"></span>Vérification en cours…</div>
+    <div class="row" id="c3a"><span class="st"></span><div><div class="q">Ce numéro est-il un client?</div><div class="a"><b>Non</b>, nouvelle cliente : Line Gagnon, 245 rue des Érables, Alma<span class="src" data-ico="people" data-size="12">Clients</span></div></div></div>
+    <div class="row" id="c3b"><span class="st"></span><div><div class="q">Chauffe-eau 40 gal électrique, remplacement</div><div class="a"><b>1 395 $</b> installé, ancien récupéré<span class="src" data-ico="tag" data-size="12">Liste de prix 2026</span></div></div></div>
+    <div class="row" id="c3c"><span class="st"></span><div><div class="q">Première place demain</div><div class="a"><b>8 h</b>, camion 2, Alma<span class="src" data-ico="calendar" data-size="12">Horaire</span></div></div></div>
+  </div>
+
+  <!-- Vérifications de l'IA, séquence 1 -->
+  <div class="check" id="check1">
+    <div class="t"><span class="ia" data-ico="bolt"></span>Vérification en cours…</div>
+    <div class="row" id="c1a"><span class="st"></span><div><div class="q">Dernière commande de Toitures Tremblay</div><div class="a">SOU-2025-0388, mars 2025 : toiles PVC 18 oz à <b>24,50 $/m²</b><span class="src" data-ico="doc" data-size="12">Soumissions</span></div></div></div>
+    <div class="row" id="c1b"><span class="st"></span><div><div class="q">Liste de prix en vigueur</div><div class="a">PVC 18 oz : <b>24,50 $/m²</b>, inchangé depuis le 1er juin<span class="src" data-ico="tag" data-size="12">Liste de prix 2026</span></div></div></div>
+    <div class="row" id="c1c"><span class="st"></span><div><div class="q">Matériel en stock</div><div class="a"><b>96 m²</b> de PVC 18 oz en rouleau, assez pour 78,12 m²<span class="src" data-ico="box" data-size="12">Inventaire</span></div></div></div>
+  </div>
+  <!-- Vérifications de l'IA, séquence 2 -->
+  <div class="check" id="check2">
+    <div class="t"><span class="ia" data-ico="bolt"></span>Vérification en cours…</div>
+    <div class="row" id="c2a"><span class="st"></span><div><div class="q">Dossier client</div><div class="a">Mélanie Fortin, <b>Honda CR-V 2021</b>, pneus d'hiver posés le 12 nov. 2025<span class="src" data-ico="doc" data-size="12">Bons de travail</span></div></div></div>
+    <div class="row" id="c2b"><span class="st"></span><div><div class="q">Pneus entreposés ici? Et le prix?</div><div class="a"><b>Non</b>. Sur jantes : 30 min, <b>59,99 $</b>. Pas sur jantes : 1 h, <b>99,99 $</b><span class="src" data-ico="tag" data-size="12">Liste de prix 2026</span></div></div></div>
+    <div class="row" id="c2c"><span class="st"></span><div><div class="q">Places libres cette semaine</div><div class="a"><b>Jeudi 9 h</b> et <b>vendredi 13 h 30</b><span class="src" data-ico="calendar" data-size="12">Rendez-vous</span></div></div></div>
+  </div>
+
+  <svg id="cursor" viewBox="0 0 24 24"><path d="M4 2l16 9-7 1.5L9.5 20z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg>
+
+  <div id="end"><div>
+    <div data-rs="#f5f7fa,64" style="margin-bottom:22px"></div>
+    <div class="eyebrow">Applications sur mesure pour les PME du Québec</div>
+    <h1>Analyse de 15 minutes gratuite</h1>
+    <a class="qr" id="qr" href="https://zap2.ca/0omj8t" target="_blank" rel="noopener" title="Ouvrir le formulaire"><svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 27 27" shape-rendering="crispEdges"><path fill="#f5f2ea" d="M0 0h27v27H0z"/><path stroke="#0b0c0e" d="M1 1.5h7m4 0h5m2 0h7M1 2.5h1m5 0h1m1 0h1m3 0h1m1 0h2m2 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m9 0h1m1 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h3m1 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h4m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m3 0h2m1 0h4m1 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 8.5h1m1 0h4m1 0h1M1 9.5h1m1 0h1m1 0h1m1 0h1m2 0h2m2 0h1m1 0h2m3 0h1m2 0h1M2 10.5h1m1 0h1m3 0h2m1 0h1m1 0h1m4 0h2m5 0h1M2 11.5h1m1 0h2m1 0h1m1 0h3m2 0h2m3 0h1m3 0h3M1 12.5h1m2 0h1m1 0h1m1 0h2m1 0h1m2 0h1m1 0h1m3 0h2m2 0h1M2 13.5h2m2 0h2m1 0h4m1 0h2m1 0h4m1 0h1m1 0h2M3 14.5h1m1 0h1m2 0h1m3 0h1m2 0h1m1 0h1m1 0h1m2 0h1m2 0h1M1 15.5h1m1 0h1m2 0h3m6 0h1m3 0h2m2 0h3M2 16.5h4m3 0h2m1 0h1m1 0h1m3 0h1m2 0h1m2 0h1M1 17.5h1m3 0h4m2 0h1m1 0h2m2 0h6M9 18.5h1m2 0h6m3 0h2m1 0h2M1 19.5h7m4 0h2m2 0h2m1 0h1m1 0h2m1 0h2M1 20.5h1m5 0h1m2 0h1m2 0h2m2 0h1m3 0h2m1 0h2M1 21.5h1m1 0h3m1 0h1m1 0h4m2 0h1m1 0h6m1 0h2M1 22.5h1m1 0h3m1 0h1m2 0h3m3 0h3m1 0h4M1 23.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m2 0h1m3 0h1M1 24.5h1m5 0h1m2 0h3m3 0h3m2 0h2m1 0h1M1 25.5h7m1 0h3m1 0h1m3 0h1m2 0h1m3 0h2"/></svg></a>
+    <div class="hint">Scannez, ou cliquez pour remplir le formulaire ici.</div>
+  </div></div>
+</div>
+
+<script>
+  // Icônes en trait, 16 px, comme dans Outlook et Business Suite. Une seule
+  // fonction, appelée dans le HTML au chargement (data-ico).
+  const ICONS = {
+    trash: "M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7",
+    archive: "M3 4h18v4H3zM5 8v12h14V8M10 12h4",
+    flag: "M5 21V4h12l-2 4 2 4H5",
+    sweep: "M4 20l6-6M14 4l6 6-8 8-6-6zM10 14l-3 7",
+    folder: "M3 6h6l2 2h10v12H3z",
+    reply: "M9 14L4 9l5-5M4 9h10a6 6 0 0 1 6 6v4",
+    replyall: "M6 14L1 9l5-5M11 14L6 9l5-5M6 9h8a6 6 0 0 1 6 6v4",
+    forward: "M15 4l5 5-5 5M20 9H10a6 6 0 0 0-6 6v4",
+    mail: "M3 5h18v14H3zM3 6l9 7 9-7",
+    calendar: "M4 5h16v15H4zM4 10h16M8 3v4M16 3v4",
+    people: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 3a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7",
+    check: "M4 12l5 5L20 6",
+    apps: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
+    search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4",
+    gear: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2",
+    help: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01",
+    inbox: "M3 4h18v16H3zM3 14h5l2 3h4l2-3h5",
+    sent: "M3 12l18-8-6 18-3-7z",
+    drafts: "M4 20h4l11-11-4-4L4 16zM13 7l4 4",
+    junk: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM5.5 5.5l13 13",
+    note: "M5 3h14v18H5zM9 8h6M9 12h6M9 16h4",
+    home: "M3 11l9-8 9 8v10h-6v-6H9v6H3z",
+    chart: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+    megaphone: "M3 10v4h3l8 5V5l-8 5zM18 9a4 4 0 0 1 0 6",
+    phone: "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z",
+    video: "M3 7h12v10H3zM15 10l6-3v10l-6-3",
+    info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v6M12 7h.01",
+    plus: "M12 5v14M5 12h14",
+    image: "M3 5h18v14H3zM7 15l3-4 3 3 2-2 3 3",
+    smile: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01",
+    thumb: "M7 11v10H3V11zM7 11l4-8a2 2 0 0 1 2 2v4h6a2 2 0 0 1 2 2l-2 8a2 2 0 0 1-2 2H7",
+    bolt: "M13 2L4 14h7l-1 8 9-12h-7z",
+    doc: "M6 2h9l5 5v15H6zM15 2v5h5M9 13h6M9 17h6",
+    tag: "M3 12l9-9h9v9l-9 9zM16 7h.01",
+    box: "M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8",
+  };
+  const ico = (n, size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONS[n]}"/></svg>`;
+  document.querySelectorAll("[data-ico]").forEach((el) => { el.innerHTML = ico(el.dataset.ico, el.dataset.size || 16) + el.innerHTML; });
+
+  // Le logo Realsync, tel que dans le code du site (components/ui/logo.tsx) :
+  // la marque avec ses trois dégradés, et le mot. `color` : blanc sur fond
+  // sombre, encre sur les fenêtres claires.
+  const RS_MARK = ["M626.79,1033.77l-18.9-12.06,1.85-2.89,35.9-56.48a48.51,48.51,0,0,0,5.61-40.14l-.49-1.48a48.77,48.77,0,0,0-70.66-26.8L475.83,954.13a7.11,7.11,0,0,0-2.59,9.68L453.81,975a29.57,29.57,0,0,1,10.81-40.28l104.27-60.21a71.17,71.17,0,0,1,97.27,26.07c1,1.78,2,3.59,2.83,5.43l3.08,7.67a70.86,70.86,0,0,1-7.52,60.7Z", "M581.78,941.13l-1,22.4-3.43-.15-66.86-2.86a48.51,48.51,0,0,0-37.57,15.22l-1,1.16a47.48,47.48,0,0,0-5.73,8A48.75,48.75,0,0,0,484,1051.49l104.28,60.2a7.11,7.11,0,0,0,9.68-2.6l19.4,11.23a29.55,29.55,0,0,1-40.28,10.78L472.8,1070.91a71.19,71.19,0,0,1-26.05-97.28c1-1.77,2.12-3.49,3.28-5.16l5.11-6.51a70.91,70.91,0,0,1,56.32-23.84Z", "M690.93,1055.93a71.15,71.15,0,0,1-71.22,71.19c-2.05,0-4.08-.08-6.11-.25l-8.19-1.18a70.89,70.89,0,0,1-48.81-36.86l-32.54-62.4L544,1016.1l1.58,3,31,59.34a48.58,48.58,0,0,0,32,24.92l1.52.31a47.57,47.57,0,0,0,9.75,1,48.75,48.75,0,0,0,48.79-48.77v-88.6a70.83,70.83,0,0,0,3.57-53.64l-2.63-6.55a29.58,29.58,0,0,1,21.48,28.38Z", "M577.54,1059.93A59.49,59.49,0,1,1,637,1000.45,59.55,59.55,0,0,1,577.54,1059.93Zm0-96.55a37.07,37.07,0,1,0,37.07,37.07A37.11,37.11,0,0,0,577.54,963.38Z"];
+  const RS_WORD = ["M867.13,1061.24h-27.2L795.72,1011H765v50.24H741.74V915.72q11.22,0,33.84.1t33.84.11q24.08,0,37.67,14a46.43,46.43,0,0,1,13.6,33.52q0,17.24-9.65,29.79t-29.79,15.47l43.39,48.37ZM765,937.1v52.73h44.22q13.69,0,20.76-7.48A25.89,25.89,0,0,0,837,963.88,27.5,27.5,0,0,0,830,945.09q-7.07-8-20.55-8Z", "M892.54,1018.06A27,27,0,0,0,903,1036.74q9,7.07,22.94,7.06a49.19,49.19,0,0,0,16.71-3q8.42-3,13-8l13.9,13.49a50.9,50.9,0,0,1-19.61,12.87,67.64,67.64,0,0,1-24.39,4.57q-25.12,0-40.17-14.74t-15-39.44q0-23.46,14.94-38.4t38.82-14.95q25.74,0,40.07,15.78t11.41,46.08ZM955,1000q-.82-11.84-9-18.27t-21.27-6.43q-12,0-20.66,6.43T893,1000Z", "M1072.5,958.9h20.76v102.34h-20.35l-1-16.61A32.05,32.05,0,0,1,1057,1059a45.52,45.52,0,0,1-20.44,5q-23.05.19-37.79-14.12T984.07,1010q0-24.9,15-39.13T1037,956.61a43.64,43.64,0,0,1,20.55,5,33.89,33.89,0,0,1,14.33,13.49ZM1015,985.37q-9.56,9.23-9.55,24.59t9.55,24.71q9.54,9.33,23.66,9.34a34.75,34.75,0,0,0,16.3-3.74,26.5,26.5,0,0,0,10.79-9.76,47.24,47.24,0,0,0,5.4-13.18,29.81,29.81,0,0,0,0-14.42,47.08,47.08,0,0,0-5.4-13.29,26.57,26.57,0,0,0-10.79-9.76,34.75,34.75,0,0,0-16.3-3.73Q1024.55,976.13,1015,985.37Z", "M1135.36,916.13v145.11H1114V916.13Z", "M1221.78,984q-10.38-9.54-27-9.54-10-.21-15.88,3t-5.92,9.23q.21,11,22.21,13.08a135.55,135.55,0,0,1,15,2.18,67.23,67.23,0,0,1,13.5,4.57,23.79,23.79,0,0,1,11,9.65q3.84,6.43,3.84,15.78-.21,14.54-12,23.46t-31.55,8.92q-29.89,0-46.71-18.89l11.21-15.15q13.29,14.73,35.91,15.15a32.71,32.71,0,0,0,15.16-3.32c4.29-2.21,6.5-5.54,6.64-10a9.92,9.92,0,0,0-5.71-9.76q-5.91-3.12-18-4.36-41.51-3.94-41.72-30.72,0-15.57,13-23.36a56.36,56.36,0,0,1,29.58-7.78q24.09,0,39.45,13.7Z", "M1348.59,958.9,1284,1108.78h-23.66l21.17-49L1240.65,958.9h24.91l17.64,48.36,10.18,29.07,11-28.65,20.34-48.78Z", "M1435.39,1061.24v-54.81q0-13.48-7.27-21.48t-20.34-8a26.54,26.54,0,0,0-20.55,8.92q-8.1,8.93-8.1,21.8v53.56h-21.38V958.69h19.52l1.24,14.95q14.54-16.41,34.46-16.4,19.3,0,31.66,13.07t12.35,35.92v55Z", "M1562.77,1048a53.3,53.3,0,0,1-38.82,16q-23.25,0-38.61-14.12T1470,1010.17q0-25.53,15.36-39.65T1524,956.41a50.73,50.73,0,0,1,37,15.15l-13.7,14.32a31.68,31.68,0,0,0-23-9.13q-14.12,0-23.46,9.24t-9.34,24.18q0,15.57,9.34,24.29t23.25,8.72q14.94,0,24.29-9.55Z"];
+  let rsN = 0;
+  function rsMark(color, size) {
+    const id = "rs" + (++rsN);
+    const grad = (n, attrs) => `<linearGradient id="${id}${n}" ${attrs} gradientUnits="userSpaceOnUse"><stop offset="0.19" stop-color="${color}" stop-opacity="0"/><stop offset="0.82" stop-color="${color}"/></linearGradient>`;
+    return `<svg viewBox="400 900 300 200" width="${size}" height="${size}" aria-hidden="true"><defs>${grad("a", 'x1="419.71" y1="975.35" x2="668.51" y2="941.95"')}${grad("b", 'x1="-432.32" y1="5157.65" x2="-183.53" y2="5124.24" gradientTransform="translate(-4048.09 3354.09) rotate(-120)"')}${grad("c", 'x1="678.29" y1="891.76" x2="591.8" y2="1083.66"')}</defs><path fill="url(#${id}a)" d="${RS_MARK[0]}"/><path fill="url(#${id}b)" d="${RS_MARK[1]}"/><path fill="url(#${id}c)" d="${RS_MARK[2]}"/><path fill="${color}" d="${RS_MARK[3]}"/></svg>`;
+  }
+  function rsWord(color, size) {
+    return `<svg viewBox="740 915 870 155" width="${size * 3.75}" height="${size}" aria-hidden="true"><g fill="${color}">${RS_WORD.map((d) => `<path d="${d}"/>`).join("")}</g></svg>`;
+  }
+  function rsLogo(color, size) { return `<span class="rs" style="display:inline-flex;align-items:center;gap:${Math.round(size * .28)}px">${rsMark(color, size)}${rsWord(color, size)}</span>`; }
+  document.querySelectorAll("[data-rs]").forEach((el) => { const [color, size] = el.dataset.rs.split(","); el.innerHTML = rsLogo(color, Number(size)); });
+
+  function fit() { document.getElementById("stage").style.setProperty("--s", Math.min(innerWidth / 1920, innerHeight / 1080)); }
+  addEventListener("resize", fit); fit();
+  document.addEventListener("visibilitychange", fit); setInterval(fit, 1000);
+
+  const $ = (id) => document.getElementById(id);
+  const on = (id) => $(id).classList.add("on");
+  const off = (id) => $(id).classList.remove("on");
+  // Un seul réglage de rythme pour toute la boucle: attentes, frappe et bulles
+  // s'y mettent tous à l'échelle. 0.78 visait ~75 s par tour; les gens
+  // trouvaient chaque étape un peu rapide, 1.0 donne ~96 s.
+  const RYTHME = 1.0;
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms * RYTHME));
+  // Les listes de vérification (l'IA vérifie les prix, la disponibilité, le
+  // dossier) : temps pour lire la question pendant que ça tourne, puis temps
+  // pour lire la réponse une fois cochée. C'était 900 et 500, trop court pour
+  // lire deux lignes; à 0.78 de rythme, chaque point passait en une seconde.
+  const LIRE_QUESTION = 1300;
+  const LIRE_REPONSE = 800;
+  async function verifier(ids) {
+    for (const id of ids) { on(id); await wait(LIRE_QUESTION); $(id).classList.add("ok"); await wait(LIRE_REPONSE); }
+  }
+
+  function type(id, text, ms = 22) {
+    const el = $(id); el.textContent = ""; el.classList.add("typing");
+    return new Promise((done) => {
+      let i = 0;
+      const t = setInterval(() => {
+        el.textContent = text.slice(0, ++i);
+        if (i >= text.length) { clearInterval(t); el.classList.remove("typing"); done(); }
+      }, ms * RYTHME);
+    });
+  }
+  function caption(html) { const c = $("cap"); c.classList.remove("on"); setTimeout(() => { c.innerHTML = html; c.classList.add("on"); }, 250); }
+  function cursorTo(x, y) { $("cursor").style.left = x + "px"; $("cursor").style.top = y + "px"; }
+  function dim(id, onOff) { $(id).setAttribute("fill", onOff ? "rgba(94,197,255,.5)" : "rgba(94,197,255,0)"); }
+  function reveal(el) { requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("on"))); }
+
+  /* ---------- Séquence 1 : le courriel et le croquis deviennent une soumission ---------- */
+  const OLD_MAILS = [
+    ["Julie Lavoie", "7 h 15", "Re : échantillons de couleur, lot 3", "Parfait pour le gris, on prend le RAL 7016…"],
+    ["Desjardins Entreprises", "6 h 50", "Dépôt reçu, facture 2291", "Un dépôt de 4 312,50 $ a été effectué…"],
+    ["Steve Gagnon", "6 h 02", "Horaire de la semaine prochaine", "Salut, je serais pas là jeudi, est-ce que…"],
+    ["Fournitures Rive-Nord", "Hier", "Liste de prix, septembre 2026", "Bonjour, veuillez trouver ci-joint notre…"],
+  ];
+  const TYPED1 = ["f-no", "f-client", "f-proj", "f-date", "l1-desc", "l1-qty", "l1-price"];
+  const HL1 = ["e-qty", "e-mat", "e-date"];
+
+  function addRow([who, when, subj, prev], isNew) {
+    const r = document.createElement("div");
+    r.className = "mail-row" + (isNew ? " new" : "");
+    const ini = who.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+    r.innerHTML = `<span class="av">${ini}</span><span class="who">${who}</span><span class="when">${when}</span><span class="subj">${subj}</span><span class="prev">${prev}</span>`;
+    if (isNew) r.id = "row-new";
+    $("rows")[isNew ? "prepend" : "append"](r);
+    reveal(r);
+  }
+
+  function reset1() {
+    ["inbox", "order", "mail", "confirm", "attach", "pdf", "scan", "approve", "l1-calc", "cond", "check1", "c1a", "c1b", "c1c", ...HL1].forEach(off);
+    ["c1a", "c1b", "c1c"].forEach((id) => $(id).classList.remove("ok"));
+    $("approve").classList.remove("pressed", "done"); $("approve").textContent = "Envoyer la soumission";
+    $("pill").textContent = "Brouillon"; $("pill").classList.remove("ok");
+    TYPED1.forEach((id) => { $(id).textContent = ""; $(id).classList.remove("typing"); });
+    $("total").innerHTML = ""; $("rows").innerHTML = ""; $("unread").textContent = "3";
+    dim("d-w", false); dim("d-h", false);
+  }
+
+  async function seq1() {
+    reset1();
+    caption("Un courriel <em>rentre</em>.");
+    on("inbox");
+    OLD_MAILS.forEach((m) => addRow(m, false));
+    addRow(["Marc Tremblay", "7 h 42", "Soumission, toiles pour le chantier de Baie-Comeau", "Salut, j'aurais besoin d'une soumission pour 6 toiles…"], true);
+    $("unread").textContent = "4";
+    $("row-new").classList.add("sel");
+    on("mail");
+    await wait(1600);
+
+    caption("L'IA lit le <em>courriel</em>.");
+    await wait(600);
+    on("e-qty"); await wait(700);
+    on("e-mat"); await wait(700);
+    on("e-date"); await wait(1100);
+
+    caption("Et le <em>croquis</em>.");
+    on("attach"); await wait(800);
+    on("pdf"); await wait(700);
+    on("scan");
+    await wait(900); dim("d-w", true); dim("d-h", true);
+    await wait(1100);
+
+    caption("L'IA <em>vérifie</em> les prix.");
+    on("check1"); await wait(900);
+    await verifier(["c1a", "c1b", "c1c"]);
+    await wait(1200);
+    off("check1");
+
+    caption("La soumission <em>se calcule</em>.");
+    on("order");
+    await wait(700);
+    $("f-no").textContent = "SOU-2026-0912";
+    await type("f-client", "Toitures Tremblay inc.", 18);
+    await type("f-proj", "Chantier Baie-Comeau", 18);
+    await type("f-date", "2026-09-18", 30);
+    await wait(200);
+    await type("l1-desc", "Toile PVC 18 oz, 4,2 m × 3,1 m, ourlet renforcé", 12); await type("l1-qty", "6", 60); on("l1-calc"); await wait(1400); await type("l1-price", "1 913,94 $", 35);
+    await wait(250);
+    $("total").innerHTML = "<span class='from'>Calculé à partir du courriel et du croquis</span><span>Total avant taxes</span><b>1 913,94 $</b>";
+    on("cond");
+    await wait(1200);
+
+    caption("<em>Tu</em> approuves.");
+    on("approve");
+    await wait(500);
+    cursorTo(1720, 905);
+    await wait(1100);
+    $("approve").classList.add("pressed"); await wait(180); $("approve").classList.remove("pressed");
+    $("approve").classList.add("done"); $("approve").textContent = "Envoyée ✓";
+    $("pill").textContent = "Envoyée"; $("pill").classList.add("ok");
+    await wait(1500);
+
+    caption("Le client l'a <em>reçue</em>.");
+    off("order");
+    await wait(500);
+    on("confirm");
+    cursorTo(1500, 1200);
+    await wait(3600);
+    ["inbox", "confirm", "cap"].forEach(off);
+    await wait(700);
+  }
+
+  /* ---------- Séquence 2 : un garage, un client sur Messenger, le rendez-vous et les pièces se créent ---------- */
+  const OLD_CONVS = [
+    ["Mathieu Roy", "8:10", "Merci! À demain pour le changement d'huile", "#5b8def"],
+    ["Sophie Lemieux", "Hier", "Vous : C'est prêt, vous pouvez passer", "#e0725c"],
+    ["Daniel Côté", "Hier", "Ok pour la facture, je passe vendredi", "#4caf78"],
+    ["Pièces Rive-Nord", "Mar.", "Vous : Parfait, merci pour la livraison", "#8a6d3b"],
+    ["Julie Bergeron", "Lun.", "Vous avez réagi 👍 à son message", "#c2185b"],
+  ];
+  const TYPED2 = ["g-client", "g-tel", "g-car", "g-km", "g-pb", "w1", "w1t", "w1p", "w2", "w2t", "w2p", "p1"];
+
+  function addConv([who, when, prev, color], isNew) {
+    const c = document.createElement("div");
+    c.className = "conv" + (isNew ? " new" : "");
+    const ini = who.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+    c.innerHTML = `<span class="av" style="background:${color}">${ini}</span><span class="who">${who}</span><span class="when">${when}</span><span class="prev">${prev}</span>`;
+    if (isNew) c.id = "conv-new";
+    $("convs")[isNew ? "prepend" : "append"](c);
+    reveal(c);
+  }
+  let dots = null;
+  async function bubble(kind, html, ms = 350) {
+    if (dots) { dots.remove(); dots = null; }
+    const m = document.createElement("div");
+    m.className = "msg " + kind; m.innerHTML = html;
+    if (kind === "in") {
+      const row = document.createElement("div"); row.className = "mrow";
+      row.innerHTML = '<span class="mav">MF</span>'; row.append(m); $("msgs").append(row);
+    } else $("msgs").append(m);
+    reveal(m);
+    await wait(ms);
+    return m;
+  }
+  async function typingDots(ms) {
+    dots = document.createElement("div");
+    dots.className = "msg out dots"; dots.innerHTML = "<i></i><i></i><i></i>";
+    $("msgs").append(dots); reveal(dots);
+    await wait(ms);
+  }
+
+  function reset2() {
+    ["msgr", "shop", "p1s", "check2", "c2a", "c2b", "c2c"].forEach(off);
+    ["c2a", "c2b", "c2c"].forEach((id) => $(id).classList.remove("ok"));
+    $("convs").innerHTML = ""; $("msgs").innerHTML = '<div class="tsep">9:12</div>'; dots = null;
+    $("d-rdv").textContent = "Aucun rendez-vous";
+    TYPED2.forEach((id) => { $(id).textContent = ""; $(id).classList.remove("typing"); });
+    $("g-pill").textContent = "Nouveau"; $("g-pill").classList.remove("ok");
+    $("p1s").classList.remove("ok"); $("p1s").textContent = "⏳ Programmé";
+  }
+
+  async function seq2() {
+    reset2();
+    caption("Un client écrit sur <em>Messenger</em>.");
+    on("msgr");
+    for (const c of OLD_CONVS) { addConv(c, false); await wait(110); }
+    await wait(900);
+    addConv(["Mélanie Fortin", "9:12", "Allo! Je voudrais faire poser mes pneus d'hiver…", "#b06ad6"], true);
+    await wait(500);
+    $("conv-new").classList.add("sel");
+    await bubble("in", "Allo! Je voudrais faire <span class='hl' id='m-pb'>poser mes pneus d'hiver</span>, vous auriez une place <span class='hl' id='m-when'>cette semaine</span>? 🙂", 1400);
+
+    caption("L'IA <em>vérifie</em> avant de répondre.");
+    on("m-pb"); await wait(450); on("m-when");
+    await typingDots(400);
+    on("check2"); await wait(900);
+    await verifier(["c2a", "c2b", "c2c"]);
+    await wait(1000);
+    off("check2");
+
+    caption("Elle pose la question qui <em>manque</em>.");
+    await wait(400);
+    await bubble("out", "Allo Mélanie! Oui, pour votre CR-V 2021. Petite question : vos pneus d'hiver sont-ils <b>déjà montés sur des jantes</b>?", 2000);
+    await bubble("in", "Oui, sur jantes 👍", 1300);
+    await typingDots(900);
+
+    caption("L'IA <em>répond</em>.");
+    await bubble("out", "Parfait! Sur jantes, c'est 30 minutes, <b>59,99 $ + taxes</b>. On a une place <b>jeudi 9 h</b> ou <b>vendredi 13 h 30</b>, ça vous va?", 1800);
+    await bubble("in", "Jeudi 9 h!", 1200);
+    await typingDots(900);
+    await bubble("out", "C'est réservé : <b>jeudi 17 septembre, 9 h</b>. Je vous envoie un rappel la veille. À jeudi!", 1200);
+
+    caption("Le rendez-vous <em>se crée</em>.");
+    on("shop");
+    await wait(700);
+    await type("g-client", "Mélanie Fortin", 20);
+    await type("g-tel", "418 555-0192", 25);
+    await type("g-car", "Honda CR-V 2021", 20);
+    await type("g-km", "Hiver, sur jantes", 30);
+    await type("g-pb", "Pose des pneus d'hiver", 18);
+    await wait(250);
+    await type("w1", "Pose pneus d'hiver, sur jantes", 16); await type("w1t", "0,5 h", 50); await type("w1p", "59,99 $", 40);
+    await type("w2", "Serrage au couple et pression", 16); await type("w2t", "inclus", 50); await type("w2p", "0 $", 40);
+    $("g-pill").textContent = "Jeudi 9 h · confirmé"; $("g-pill").classList.add("ok");
+    $("d-rdv").textContent = "Jeudi 17 sept., 9 h";
+    await wait(600);
+
+    caption("Le rappel est <em>programmé</em>.");
+    await type("p1", "Texto de rappel, mercredi 17 h", 16);
+    on("p1s");
+    await wait(1600);
+    $("p1s").textContent = "✓ Programmé"; $("p1s").classList.add("ok");
+    await wait(3400);
+    ["msgr", "shop", "cap"].forEach(off);
+    await wait(700);
+  }
+
+  /* ---------- Séquence 3 : un appel rentre dans Quo, le dossier et le texto se font seuls ---------- */
+  const TYPED3 = ["s-client", "s-tel", "s-addr", "s-req", "s-prio", "s-when", "s-l1", "s-p1"];
+  const CALL = [
+    ["0:02", "Vous", "Plomberie Girard, bonjour!"],
+    ["0:04", "418 555-0187", "Oui bonjour, c'est <span class='hl' id='t-name'>Line Gagnon</span>. Mon <span class='hl' id='t-pb'>chauffe-eau coule</span> dans le sous-sol depuis ce matin."],
+    ["0:11", "Vous", "Ok. Il a quel âge à peu près, pis c'est un 40 ou un 60 gallons?"],
+    ["0:15", "Line Gagnon", "C'est un <span class='hl' id='t-model'>40 gallons électrique</span>, il a <span class='hl' id='t-age'>12 ans</span> je pense. Je suis au <span class='hl' id='t-addr'>245 rue des Érables à Alma</span>."],
+    ["0:24", "Vous", "Parfait. Je vous envoie un texto avec le prix, pis on peut passer <span class='hl' id='t-when'>demain matin</span>."],
+    ["0:29", "Line Gagnon", "Super, merci beaucoup!"],
+  ];
+  const OLD_CALLS = [
+    ["Mathieu Bergeron", "8 h 40", "↗ Appel sortant · 2:10", "#5b8def"],
+    ["Sylvie Tremblay", "Hier", "Vous : La facture est envoyée, merci!", "#e0725c"],
+    ["Toitures Tremblay", "Hier", "↙ Appel entrant · 4:52", "#4caf78"],
+  ];
+  let timerHandle = null;
+  function startTimer() {
+    let t = 0; $("q-timer").textContent = "00:00";
+    timerHandle = setInterval(() => { t++; $("q-timer").textContent = "00:" + String(t).padStart(2, "0"); }, 1000);
+  }
+  function addQrow([who, when, prev, color], isNew) {
+    const r = document.createElement("div");
+    r.className = "qrow" + (isNew ? " sel" : "");
+    const ini = who.replace(/[^A-Za-zÀ-ÿ ]/g, "").split(" ").filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "?";
+    r.innerHTML = `<span class="av" style="background:${color}">${ini}</span><span class="who">${who}</span><span class="when">${when}</span><span class="prev">${prev}</span>`;
+    if (isNew) r.id = "qrow-new";
+    $("qrows")[isNew ? "prepend" : "append"](r);
+    reveal(r);
+  }
+  function reset3() {
+    ["quo", "svc", "check3", "c3a", "c3b", "c3c", "s-calc", "s-cond", "q-callcard", "q-trcard", "q-sumcard", "q-sum", "q-sms", "q-ans"].forEach(off);
+    ["c3a", "c3b", "c3c"].forEach((id) => $(id).classList.remove("ok"));
+    TYPED3.forEach((id) => { $(id).textContent = ""; $(id).classList.remove("typing"); });
+    $("q-lines").innerHTML = ""; $("qrows").innerHTML = "";
+    $("q-av").textContent = "?"; $("q-cav").textContent = "?"; $("q-name").textContent = "418 555-0187"; $("q-sub").textContent = "Alma, QC";
+    $("q-call").classList.remove("ended"); $("q-ct").textContent = "Appel entrant…"; $("q-cs").textContent = "Pas encore répondu";
+    $("q-live").textContent = "● EN DIRECT"; $("s-pill").textContent = "Nouvelle"; $("s-pill").classList.remove("ok"); $("s-conf").textContent = "En attente de la cliente";
+    clearInterval(timerHandle);
+  }
+  async function seq3() {
+    reset3();
+    caption("Un appel <em>rentre</em>.");
+    on("quo");
+    for (const c of OLD_CALLS) { addQrow(c, false); await wait(100); }
+    await wait(900);
+    addQrow(["418 555-0187", "9 h 12", "<i data-ico='phone'></i>Appel entrant…", "#9a9a9a"], true);
+    document.querySelectorAll("#qrow-new [data-ico]").forEach((el) => { el.innerHTML = ico(el.dataset.ico, 14); });
+    on("q-callcard");
+    await wait(1600);
+    $("q-ct").textContent = "En cours"; $("q-cs").textContent = "Vous avez répondu";
+    startTimer();
+
+    caption("Quo <em>transcrit</em> en direct.");
+    on("q-trcard");
+    await wait(500);
+    for (const [at, sp, html] of CALL) {
+      const l = document.createElement("div"); l.className = "tl";
+      l.innerHTML = `<span class="t">${at}</span><span><b>${sp} :</b> ${html}</span>`;
+      $("q-lines").append(l); reveal(l);
+      if (sp === "418 555-0187") { await wait(1500); $("q-av").textContent = "LG"; $("q-cav").textContent = "LG"; $("q-name").textContent = "Line Gagnon"; $("q-sub").textContent = "418 555-0187 · Alma, QC"; document.querySelector("#qrow-new .who").textContent = "Line Gagnon"; const qa = document.querySelector("#qrow-new .av"); qa.textContent = "LG"; qa.style.background = "#5b4bdb"; }
+      await wait(sp === "Vous" ? 1400 : 2100);
+    }
+    ["t-name", "t-pb", "t-model", "t-age", "t-addr", "t-when"].forEach((id) => on(id));
+    await wait(1000);
+    clearInterval(timerHandle);
+    $("q-call").classList.add("ended"); $("q-ct").textContent = "Appel terminé"; $("q-cs").textContent = "Vous avez répondu · 0:31";
+    $("q-live").textContent = "TERMINÉ";
+    document.querySelector("#qrow-new .prev").innerHTML = "↙ Appel entrant · 0:31";
+    await wait(600);
+    on("q-sumcard"); on("q-sum");
+    await wait(1600);
+
+    caption("L'IA <em>vérifie</em> après l'appel.");
+    on("check3"); await wait(900);
+    await verifier(["c3a", "c3b", "c3c"]);
+    await wait(900);
+    off("check3");
+
+    caption("Le dossier <em>se crée</em>.");
+    on("svc");
+    await wait(700);
+    await type("s-client", "Line Gagnon", 20);
+    await type("s-tel", "418 555-0187", 25);
+    await type("s-addr", "245, rue des Érables, Alma", 16);
+    await type("s-req", "Chauffe-eau 40 gal électrique, 12 ans, fuite au sous-sol", 12);
+    await type("s-prio", "Urgent", 40);
+    await type("s-when", "Demain 8 h, camion 2", 22);
+    await type("s-l1", "Remplacement chauffe-eau 40 gal électrique", 12); on("s-calc"); await wait(500); await type("s-p1", "1 395 $", 40);
+    on("s-cond");
+    await wait(800);
+
+    caption("Le texto <em>part</em>. La cliente confirme.");
+    on("q-sms");
+    document.querySelector("#qrow-new .prev").innerHTML = "Vous : Bonjour Mme Gagnon, suite à votre appel…";
+    await wait(2600);
+    on("q-ans");
+    document.querySelector("#qrow-new .prev").innerHTML = "OUI merci!! 🙏";
+    await wait(600);
+    $("s-pill").textContent = "Confirmée · demain 8 h"; $("s-pill").classList.add("ok"); $("s-conf").textContent = "Reçue par texto à 9 h 16";
+    await wait(3600);
+    ["quo", "svc", "cap"].forEach(off);
+    await wait(700);
+  }
+
+  // Tant que la souris est sur la carte finale, la boucle attend : quelqu'un
+  // est peut-être en train de cliquer le QR.
+  let surLaFin = false;
+  $("end").addEventListener("mouseenter", () => { surLaFin = true; });
+  $("end").addEventListener("mouseleave", () => { surLaFin = false; });
+  async function finale() {
+    on("end");
+    await wait(6000);
+    while (surLaFin) await wait(500);
+    off("end");
+    await wait(800);
+  }
+
+  // Une seule séquence : le courriel dans Outlook. Décision de Jérémie du
+  // 2026-09-12, plus clair et plus commun qu'un garage sur Messenger ou un
+  // appel dans Quo. Les deux autres restent dans le fichier ; pour les
+  // remettre, ajouter `await seq2();` ou `await seq3();` ici.
+  async function play() {
+    await seq1();
+    await finale();
+    play();
+  }
+  play();
+</script>
+</body>
+</html>
