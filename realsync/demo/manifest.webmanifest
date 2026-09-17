@@ -1,0 +1,26 @@
+{
+  "id": "./boucle-ia.html",
+  "name": "Realsync — Démo",
+  "short_name": "Realsync",
+  "description": "Démonstration de l’automatisation Realsync.",
+  "lang": "fr-CA",
+  "start_url": "./boucle-ia.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
