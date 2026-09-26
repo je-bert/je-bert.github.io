@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'realsync-presentation-';
-const CACHE_NAME = `${CACHE_PREFIX}v50`;
+const CACHE_NAME = `${CACHE_PREFIX}v52`;
 const APP_SHELL = [
   './', './index.html', './presentation.js', './pwa.js', './manifest.webmanifest',
   './assets/logo-white.svg',

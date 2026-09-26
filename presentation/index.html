@@ -48,6 +48,8 @@
         font-family: Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
       button, a { font: inherit; }
+      /* Keep pinch zoom and scrolling, but treat rapid taps on controls as clicks. */
+      button, a, .controls, .choice { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
       button { cursor: pointer; }
       .presentation {
         position: relative;
@@ -72,7 +74,7 @@
       .topbar {
         position: absolute;
         z-index: 4;
-        top: max(1.25rem, env(safe-area-inset-top));
+        top: max(1.75rem, env(safe-area-inset-top));
         right: max(var(--page-gutter), env(safe-area-inset-right));
         left: max(var(--page-gutter), env(safe-area-inset-left));
         display: flex;
@@ -333,7 +335,9 @@
       .preview-dialog { inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #fff; }
       .preview-dialog::backdrop { background: rgba(0,0,0,0.9); }
       .preview-dismiss { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); border: 0; background: transparent; cursor: zoom-out; }
-      .preview-dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+      /* Safari can apply :focus-visible when showModal() was triggered by touch. */
+      .preview-dismiss:focus { outline: none; }
+      .preview-dialog[data-keyboard-focus="true"] .preview-dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
       .preview-dialog img { display: block; width: 100%; height: 100%; object-fit: contain; }
       @media (orientation: portrait) {
         .slide--case { padding: 6rem 1.3rem 7rem; }
@@ -382,7 +386,7 @@
       @media (max-width: 800px), (orientation: portrait) {
         :root { --page-gutter: 1rem; }
         body { overflow: auto; }
-        .topbar { top: max(0.8rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right)); left: max(1rem, env(safe-area-inset-left)); }
+        .topbar { top: max(1.3rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right)); left: max(1rem, env(safe-area-inset-left)); }
         .brand img { width: 7.5rem; } .brand-label { display: none; }
         .slide { grid-template-columns: 1fr; gap: 1.4rem; align-content: safe center; padding-top: 5.5rem; padding-bottom: 6.5rem; }
         .slide--opening, .slide--final { align-content: center; }

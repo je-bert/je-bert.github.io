@@ -27,14 +27,19 @@ function buildBookingUrl(answers) {
 
 function initializeImagePreview(dialog, image, buttons) {
   buttons.forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', (event) => {
       image.src = button.dataset.preview;
       image.alt = button.dataset.previewTitle;
       dialog.setAttribute('aria-label', button.dataset.previewTitle);
+      dialog.setAttribute('data-keyboard-focus', String(event.detail === 0));
       dialog.showModal();
     });
   });
   dialog.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('pointerdown', () => dialog.setAttribute('data-keyboard-focus', 'false'));
+  dialog.addEventListener('keydown', (event) => {
+    if (event.key === 'Tab') dialog.setAttribute('data-keyboard-focus', 'true');
+  });
 }
 
 function initPresentation() {

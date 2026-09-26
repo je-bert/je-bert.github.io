@@ -66,6 +66,26 @@ test('an enlarged preview closes on any click and can reopen with another image'
   expect(image.alt).toBe('joly');
 });
 
+test('preview focus indication follows touch versus keyboard input', () => {
+  const dialog = new EventTarget();
+  const attributes = new Map();
+  dialog.setAttribute = (name, value) => attributes.set(name, value);
+  dialog.showModal = () => {};
+  dialog.close = () => {};
+  const button = new EventTarget();
+  button.dataset = { preview: 'example.png', previewTitle: 'Example' };
+  presentation.initializeImagePreview(dialog, {}, [button]);
+
+  button.dispatchEvent(Object.assign(new Event('click'), { detail: 1 }));
+  expect(attributes.get('data-keyboard-focus')).toBe('false');
+  dialog.dispatchEvent(Object.assign(new Event('keydown'), { key: 'Tab' }));
+  expect(attributes.get('data-keyboard-focus')).toBe('true');
+  dialog.dispatchEvent(new Event('pointerdown'));
+  expect(attributes.get('data-keyboard-focus')).toBe('false');
+  button.dispatchEvent(Object.assign(new Event('click'), { detail: 0 }));
+  expect(attributes.get('data-keyboard-focus')).toBe('true');
+});
+
 describe("createPresentationNavigator", () => {
   test('notifies when leaving the last slide by previous or direct navigation', () => {
     let departures = 0;
