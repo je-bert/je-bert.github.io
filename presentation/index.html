@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, nofollow, noimageindex">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0c0e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Realsync">
+    <title>Realsync — Votre partenaire dans Chaudière-Appalaches</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="apple-touch-icon" href="../realsync/demo/icons/apple-touch-icon.png">
+    <link rel="icon" href="../realsync/demo/icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --ink: #0b0c0e;
+        --ink-soft: #16191d;
+        --paper: #f7f8fa;
+        --text: #f7f8fa;
+        --muted: #b7c0ca;
+        --accent: #5ec5ff;
+        --accent-ink: #07131b;
+        --line: rgba(255, 255, 255, 0.13);
+        --shadow: 0 28px 75px rgba(0, 0, 0, 0.35);
+        --page-gutter: 1.5rem;
+        --content-gutter: clamp(1.5rem, 4vw, 4rem);
+      }
+
+      * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
+      html {
+        color-scheme: dark;
+        background: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        min-width: 320px;
+        min-height: 100dvh;
+        margin: 0;
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--text);
+        font-family: Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      button, a { font: inherit; }
+      button { cursor: pointer; }
+      .presentation {
+        position: relative;
+        min-height: 100dvh;
+        overflow: hidden;
+        isolation: isolate;
+        background:
+          radial-gradient(circle at 12% 6%, rgba(94, 197, 255, 0.2), transparent 29rem),
+          radial-gradient(circle at 90% 82%, rgba(47, 135, 183, 0.18), transparent 30rem),
+          var(--ink);
+      }
+      .presentation::before {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        content: "";
+        opacity: 0.18;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        background-size: 3rem 3rem;
+        mask-image: linear-gradient(to bottom, black, transparent 78%);
+      }
+      .topbar {
+        position: absolute;
+        z-index: 4;
+        top: max(1.25rem, env(safe-area-inset-top));
+        right: max(var(--page-gutter), env(safe-area-inset-right));
+        left: max(var(--page-gutter), env(safe-area-inset-left));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        pointer-events: none;
+      }
+      .brand { display: inline-flex; align-items: center; gap: 0.65rem; }
+      .brand img { display: block; width: 9.4rem; height: auto; }
+      .brand-label {
+        padding-left: 0.8rem;
+        border-left: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+      .icon-button {
+        display: inline-flex;
+        align-items: center;
+        min-width: 44px;
+        min-height: 44px;
+        gap: 0.55rem;
+        padding: 0.6rem 0.85rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(11, 12, 14, 0.55);
+        color: var(--text);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.18);
+        font-size: 0.8rem;
+        font-weight: 700;
+        pointer-events: auto;
+        transition-property: background-color, color, scale;
+        transition-duration: 150ms;
+        transition-timing-function: ease-out;
+      }
+      .icon-button:hover { background: rgba(255, 255, 255, 0.1); }
+      .icon-button:active { scale: 0.96; }
+      .icon-button:focus-visible, .nav-button:focus-visible, .progress-step:focus-visible, .primary-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+      .icon-button svg, .nav-button svg, .primary-link svg { width: 1.2em; height: 1.2em; fill: none; stroke: currentColor; stroke-width: 2; }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1.02fr) minmax(24rem, 0.98fr);
+        gap: clamp(2rem, 6vw, 7rem);
+        align-items: center;
+        padding: clamp(6.5rem, 10vh, 8.5rem) max(var(--content-gutter), env(safe-area-inset-right)) clamp(7.2rem, 12vh, 9rem) max(var(--content-gutter), env(safe-area-inset-left));
+        overflow-y: auto;
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(12px);
+        transition-property: opacity, transform, visibility;
+        transition-duration: 280ms, 280ms, 0ms;
+        transition-timing-function: ease-out;
+        transition-delay: 0ms, 0ms, 280ms;
+      }
+      .slide.is-active {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+        transition-delay: 0ms;
+      }
+      .slide--opening, .slide--final { grid-template-columns: minmax(0, 1fr); text-align: center; }
+      .slide--opening .copy, .slide--final .copy { max-width: 68rem; margin: 0 auto; }
+      .copy { max-width: 47rem; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin: 0 0 1.25rem;
+        color: var(--accent);
+        font-size: clamp(0.72rem, 1vw, 0.9rem);
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      h1, h2, h3, p { margin-top: 0; }
+      h1, h2 { text-wrap: balance; }
+      h1 {
+        max-width: 17ch;
+        margin-bottom: 1.5rem;
+        font-size: clamp(2.6rem, 5.9vw, 6.7rem);
+        line-height: 0.98;
+        letter-spacing: -0.065em;
+      }
+      .slide--opening h1, .slide--final h1 { max-width: 24ch; margin-right: auto; margin-left: auto; }
+      .slide--opening h1 span { display: block; }
+      h2 {
+        margin-bottom: 1.25rem;
+        font-size: clamp(2.2rem, 4.6vw, 5.35rem);
+        line-height: 1.02;
+        letter-spacing: -0.06em;
+      }
+      .lede {
+        max-width: 43rem;
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: clamp(1.02rem, 1.6vw, 1.42rem);
+        line-height: 1.62;
+        text-wrap: pretty;
+      }
+      .slide--opening .lede, .slide--final .lede { margin-right: auto; margin-left: auto; }
+      .statement {
+        max-width: 51rem;
+        margin: 2.4rem auto 0;
+        padding: 1.1rem 1.3rem;
+        border: 1px solid rgba(94, 197, 255, 0.35);
+        border-radius: 1rem;
+        background: rgba(94, 197, 255, 0.11);
+        color: var(--text);
+        font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+        font-weight: 700;
+        line-height: 1.5;
+        text-wrap: pretty;
+      }
+      .statement strong { color: var(--accent); }
+
+      .visual {
+        position: relative;
+        min-height: min(49vw, 32rem);
+        overflow: hidden;
+        border-radius: 2rem;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      }
+      .visual::before {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background: radial-gradient(circle at 14% 14%, rgba(94, 197, 255, 0.23), transparent 36%), radial-gradient(circle at 90% 88%, rgba(255, 255, 255, 0.08), transparent 38%);
+      }
+      .surface {
+        position: absolute;
+        z-index: 1;
+        border-radius: 1.2rem;
+        background: var(--paper);
+        color: #1d252d;
+        box-shadow: 0 24px 45px rgba(0, 0, 0, 0.18);
+      }
+      .surface-label { color: #5c6670; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+
+      .order-document { top: 14%; left: 8%; width: 45%; padding: 1.4rem; transform: rotate(-4deg); }
+      .doc-head { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid #dce1e6; }
+      .doc-mark { display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border-radius: 0.6rem; background: #232a31; color: #fff; font-weight: 800; }
+      .doc-lines { display: grid; gap: 0.65rem; padding-top: 1.25rem; }
+      .doc-lines span { display: block; height: 0.55rem; border-radius: 999px; background: #d9dee3; }
+      .doc-lines span:nth-child(1) { width: 82%; } .doc-lines span:nth-child(2) { width: 58%; } .doc-lines span:nth-child(3) { width: 93%; } .doc-lines span:nth-child(4) { width: 69%; }
+      .scan-line { position: absolute; right: 1.2rem; left: 1.2rem; bottom: 31%; height: 2px; background: var(--accent); box-shadow: 0 0 18px 4px rgba(94, 197, 255, 0.8); }
+      .transform-arrow { position: absolute; z-index: 2; top: 46%; left: 47%; display: grid; width: 4.2rem; height: 4.2rem; place-items: center; border-radius: 50%; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 8px rgba(94, 197, 255, 0.18); }
+      .transform-arrow svg { width: 2rem; height: 2rem; fill: none; stroke: currentColor; stroke-width: 2.5; }
+      .work-order { right: 6%; bottom: 10%; width: 48%; padding: 1.25rem; }
+      .work-order h3 { margin: 0.45rem 0 1rem; font-size: 1.15rem; letter-spacing: -0.04em; }
+      .work-row { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; padding: 0.6rem 0; border-top: 1px solid #e4e8ec; font-size: 0.78rem; font-weight: 700; }
+      .work-row span:last-child { color: #537789; font-size: 0.71rem; }
+      .verify-pill { display: inline-flex; margin-top: 0.9rem; padding: 0.48rem 0.7rem; border-radius: 999px; background: #daf4ff; color: #163b4d; font-size: 0.7rem; font-weight: 800; }
+
+      .inbox { inset: 12% 9% 11%; padding: 0; overflow: hidden; }
+      .app-bar { display: flex; align-items: center; height: 3.4rem; padding: 0 1rem; background: #1b2630; color: #fff; }
+      .app-dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--accent); box-shadow: 1rem 0 rgba(255,255,255,.35), 2rem 0 rgba(255,255,255,.35); }
+      .app-title { margin-left: auto; font-size: 0.78rem; font-weight: 700; }
+      .inbox-body { display: grid; grid-template-columns: 31% 1fr; height: calc(100% - 3.4rem); }
+      .inbox-rail { padding: 1.2rem 0.9rem; background: #e8edf0; }
+      .inbox-rail span { display: block; margin-bottom: 0.9rem; color: #70808b; font-size: 0.7rem; font-weight: 700; }
+      .inbox-rail span:first-child { color: #1e323e; }
+      .thread-list { padding: 0.9rem; }
+      .thread { display: grid; grid-template-columns: 0.75rem 1fr auto; gap: 0.55rem; align-items: center; padding: 0.78rem 0.15rem; border-bottom: 1px solid #e4e8eb; }
+      .thread::before { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #b9c4cc; content: ""; }
+      .thread:first-child::before { background: var(--accent); }
+      .thread strong { font-size: 0.75rem; } .thread small { display: block; margin-top: 0.18rem; color: #71808b; font-size: 0.64rem; }
+      .thread em { padding: 0.26rem 0.42rem; border-radius: 999px; background: #e1f6ff; color: #17465d; font-size: 0.58rem; font-style: normal; font-weight: 800; }
+      .follow-up { right: 7%; bottom: 9%; width: 55%; padding: 1rem 1.1rem; }
+      .follow-up h3 { margin: 0.42rem 0 0.7rem; font-size: 1rem; letter-spacing: -0.035em; }
+      .follow-up p { margin: 0; color: #697781; font-size: 0.73rem; line-height: 1.45; }
+      .next-action { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.8rem; padding-top: 0.75rem; border-top: 1px solid #e3e7ea; color: #1d596f; font-size: 0.72rem; font-weight: 800; }
+      .next-action::before { width: 0.62rem; height: 0.62rem; border: 2px solid currentColor; border-radius: 50%; content: ""; }
+
+      .estimate { inset: 10% 8%; padding: 0; overflow: hidden; }
+      .estimate-top { display: flex; align-items: center; justify-content: space-between; padding: 1.15rem 1.25rem; background: #f1f3f5; border-bottom: 1px solid #e1e5e9; }
+      .estimate-top strong { font-size: 0.9rem; } .estimate-top span { color: #4c6878; font-size: 0.67rem; font-weight: 800; }
+      .estimate-body { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 1rem; padding: 1rem 1.25rem; }
+      .form-label { display: block; margin-bottom: 0.42rem; color: #75828c; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+      .form-value { min-height: 2.35rem; margin-bottom: 0.75rem; padding: 0.65rem; border: 1px solid #dbe1e6; border-radius: 0.55rem; background: #fff; font-size: 0.73rem; font-weight: 700; }
+      .quote-list { padding: 0.95rem; border-radius: 0.9rem; background: #1b2d37; color: #fff; }
+      .quote-list h3 { margin: 0 0 0.8rem; font-size: 0.78rem; }
+      .quote-list div { display: flex; justify-content: space-between; padding: 0.5rem 0; border-top: 1px solid rgba(255,255,255,.14); color: #cbd5db; font-size: 0.63rem; }
+      .quote-list div:last-child { color: var(--accent); font-weight: 800; }
+      .search-chip { position: absolute; right: 9%; bottom: 9%; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 0.95rem; border-radius: 999px; background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 28px rgba(0,0,0,.2); font-size: 0.7rem; font-weight: 800; }
+      .search-chip svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2.3; }
+
+      .process { display: grid; width: min(76rem, 100%); grid-template-columns: repeat(3, 1fr); gap: 0.7rem; margin: 0 auto; }
+      .process-step { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; min-height: 8rem; padding: 1.5rem 1.25rem; border-radius: 1.2rem; background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.11); text-align: center; }
+      .process-number { display: block; color: var(--accent); font-size: 0.78rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .process-icon { display: block; flex-shrink: 0; width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; color: var(--text); }
+      .process-step strong { display: block; max-width: 24ch; font-size: clamp(1rem, 1.35vw, 1.2rem); line-height: 1.4; text-wrap: balance; }
+      .human-note { width: min(58rem, 100%); margin: 2rem auto 0; color: var(--muted); font-size: clamp(0.95rem, 1.35vw, 1.2rem); line-height: 1.55; text-wrap: pretty; }
+      .human-note strong { color: var(--text); }
+
+      .primary-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 58px;
+        gap: 0.75rem;
+        margin-top: 2.2rem;
+        padding: 1rem 1.45rem 1rem 1.6rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        box-shadow: 0 16px 36px rgba(94, 197, 255, 0.22);
+        font-size: clamp(1rem, 1.3vw, 1.16rem);
+        font-weight: 800;
+        text-decoration: none;
+        transition-property: background-color, color, scale, box-shadow;
+        transition-duration: 150ms;
+        transition-timing-function: ease-out;
+      }
+      .jeremie-avatar { position: relative; display: inline-block; flex: 0 0 auto; width: 36px; height: 36px; overflow: hidden; border-radius: 50%; outline: 1px solid rgba(255,255,255,.25); outline-offset: -1px; background: var(--ink-soft); }
+      .jeremie-avatar img { position: absolute; width: 264%; max-width: none; height: auto; left: -124%; top: -59%; }
+      .primary-link:hover { background: #8bd5ff; box-shadow: 0 20px 42px rgba(94, 197, 255, 0.32); }
+      .primary-link:active { scale: 0.96; }
+      .slide--proof { grid-template-columns: 1fr; padding-top: 6rem; padding-bottom: 6.3rem; }
+      .proof-content { width: 100%; min-width: 0; margin: auto; }
+      .proof-content > .eyebrow { margin-bottom: 0.65rem; }
+      .proof-content > h2 { font-size: clamp(1.8rem, 3.4vw, 3.5rem); margin-bottom: 1.3rem; }
+      .projects-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      .project-card { display: flex; flex-direction: column; padding: 1rem; border-radius: 1.2rem; background: radial-gradient(ellipse at 50% 0, rgba(94,197,255,.12), transparent 60%), rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px var(--line); }
+      .project-card .client-logo { flex: 0 0 auto; margin: 0 auto 0.85rem; width: 156px; }
+      .project-card .screenshot-button { flex-shrink: 0; width: 100%; margin: 0; border-radius: 0.4rem; }
+      .project-card .case-screenshot { width: 100%; max-height: clamp(90px, 18vh, 190px); object-fit: cover; object-position: top; }
+      .project-card .enlarge-label { right: 0.35rem; bottom: 0.35rem; padding: 0.4rem 0.55rem; font-size: 0.65rem; }
+      .project-benefit { margin: 0.75rem 0; font-size: 0.9rem; line-height: 1.4; text-wrap: pretty; }
+      .project-gain { display: flex; flex-direction: column; gap: 0.2rem; margin: auto 0 0; }
+      .project-gain strong { color: var(--accent); font-size: clamp(1.3rem, 2.2vw, 2rem); line-height: 1.15; letter-spacing: -0.03em; text-wrap: balance; }
+      .workshop-proof { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-top: 1.1rem; padding: 1rem 1.2rem; border-radius: 1.2rem; background: radial-gradient(ellipse at 50% 0, rgba(94,197,255,.12), transparent 60%), rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px var(--line); }
+      .workshop-proof p { margin: 0; font-size: 0.95rem; line-height: 1.4; }
+      .workshop-proof strong { display: block; text-wrap: balance; }
+      .workshop-proof p span { display: block; margin-top: 0.4rem; color: var(--muted); font-size: 0.78rem; }
+      .partner-logos { display: flex; align-items: center; flex-shrink: 0; gap: 1.4rem; }
+      .partner-logos img { display: block; width: 140px; height: 44px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.85; }
+      .partner-logos img:last-child { width: 120px; }
+      .slide--case { grid-template-columns: 1fr; align-content: center; gap: 1.25rem; padding: 5.8rem 5vw 6rem; }
+      .case-heading { display: flex; align-items: center; gap: 1.7rem; width: min(100%, 68rem); margin: auto; }
+      /* Match the monochrome client logos on realsync.ca; previews keep their colors. */
+      .client-logo { display: flex; align-items: center; justify-content: center; flex: 0 0 156px; height: 70px; }
+      .client-logo img { display: block; width: auto; height: auto; max-width: 100%; max-height: 64px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.85; }
+      .case-copy .eyebrow { margin-bottom: 0.45rem; font-size: 0.7rem; }
+      .case-copy h2 { margin-bottom: 0.55rem; font-size: clamp(1.6rem, 3vw, 3rem); }
+      .case-copy .lede { max-width: none; font-size: 1rem; line-height: 1.4; }
+      .case-example { margin: 0; text-align: center; min-width: 0; }
+      .screenshot-button { position: relative; display: block; width: fit-content; max-width: 100%; margin: auto; padding: 0; border: 0; border-radius: 0.9rem; background: #fff; box-shadow: var(--shadow); overflow: hidden; }
+      .case-screenshot { display: block; width: auto; max-width: 100%; height: auto; max-height: calc(100dvh - 315px); object-fit: contain; }
+      .enlarge-label { position: absolute; right: 0.75rem; bottom: 0.75rem; padding: 0.65rem 0.9rem; border-radius: 999px; background: #0b0c0e; color: #fff; font-size: 0.75rem; font-weight: 700; }
+      .screenshot-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+      .case-example figcaption { margin-top: 0.55rem; color: var(--muted); font-size: 0.72rem; }
+      .preview-dialog { inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #fff; }
+      .preview-dialog::backdrop { background: rgba(0,0,0,0.9); }
+      .preview-dismiss { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); border: 0; background: transparent; cursor: zoom-out; }
+      .preview-dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+      .preview-dialog img { display: block; width: 100%; height: 100%; object-fit: contain; }
+      @media (orientation: portrait) {
+        .slide--case { padding: 6rem 1.3rem 7rem; }
+        .case-heading { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .client-logo { flex-basis: auto; width: 156px; }
+        .case-copy h2 { font-size: clamp(1.7rem, 5vw, 3rem); }
+      }
+      .slide--booking { text-align: left; }
+      .slide--booking h2 { max-width: 15ch; }
+      .questionnaire { padding: 1.6rem; border-radius: 1.5rem; background: rgba(255,255,255,0.06); box-shadow: inset 0 0 0 1px var(--line); }
+      .questionnaire fieldset { margin: 0 0 1.3rem; padding: 0; border: 0; }
+      .questionnaire legend { margin-bottom: 0.8rem; font-size: 1rem; font-weight: 800; }
+      .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+      .choice { position: relative; cursor: pointer; }
+      .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+      .choice span { display: flex; align-items: center; gap: 0.5rem; height: 100%; min-height: 48px; padding: 0.7rem; border: 1px solid #66727c; border-radius: 0.75rem; font-size: 0.88rem; line-height: 1.3; }
+      .choice span::before { content: ''; flex: 0 0 1rem; height: 1rem; border: 1px solid currentColor; border-radius: 0.2rem; text-align: center; line-height: 1rem; }
+      .choice input:checked + span::before { content: '✓'; }
+      .choice input:checked + span { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 800; }
+      .choice input:focus-visible + span { outline: 3px solid #fff; outline-offset: 3px; }
+      .questionnaire .primary-link { width: 100%; margin-top: 1rem; padding: 0.65rem 1rem; }
+
+      .controls {
+        position: absolute;
+        z-index: 4;
+        right: max(var(--page-gutter), env(safe-area-inset-right));
+        bottom: max(1.4rem, env(safe-area-inset-bottom));
+        left: max(var(--page-gutter), env(safe-area-inset-left));
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 1.25rem;
+      }
+      .screen-count { color: var(--muted); font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .progress { display: flex; align-items: center; gap: 0.42rem; }
+      .progress-step { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 999px; background: transparent; }
+      .progress-step::before { display: block; width: 0.45rem; height: 0.45rem; margin: auto; border-radius: inherit; background: rgba(255, 255, 255, 0.3); content: ""; transition-property: width, background-color; transition-duration: 180ms; transition-timing-function: ease-out; }
+      .progress-step.is-active::before { width: 1.3rem; background: var(--accent); }
+      .navigation { display: flex; justify-content: flex-end; gap: 0.65rem; }
+      .nav-button { display: inline-flex; align-items: center; justify-content: center; width: 3.4rem; height: 3.4rem; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(255,255,255,0.08); color: var(--text); box-shadow: 0 8px 24px rgba(0,0,0,.18); transition-property: background-color, color, scale, opacity; transition-duration: 150ms; transition-timing-function: ease-out; }
+      .nav-button:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+      .nav-button:active:not(:disabled) { scale: 0.96; }
+      .nav-button:disabled { cursor: not-allowed; opacity: 0.33; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+      @media (max-width: 800px), (orientation: portrait) {
+        :root { --page-gutter: 1rem; }
+        body { overflow: auto; }
+        .topbar { top: max(0.8rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right)); left: max(1rem, env(safe-area-inset-left)); }
+        .brand img { width: 7.5rem; } .brand-label { display: none; }
+        .slide { grid-template-columns: 1fr; gap: 1.4rem; align-content: safe center; padding-top: 5.5rem; padding-bottom: 6.5rem; }
+        .slide--opening, .slide--final { align-content: center; }
+        h1 { font-size: clamp(2.5rem, 10vw, 4.5rem); } h2 { font-size: clamp(2rem, 8vw, 3.6rem); }
+        .visual { min-height: 18rem; max-width: 34rem; width: 100%; margin: 0 auto; }
+        .process { grid-template-columns: 1fr; gap: 0.55rem; }
+        .process-step { min-height: 0; gap: 0.45rem; padding: 1rem; }
+        .process-icon { width: 32px; height: 32px; }
+        .human-note { margin-top: 1.1rem; }
+        .controls { right: max(1rem, env(safe-area-inset-right)); bottom: max(0.9rem, env(safe-area-inset-bottom)); left: max(1rem, env(safe-area-inset-left)); grid-template-columns: auto 1fr auto; gap: 0.7rem; }
+        .progress { justify-content: center; } .screen-count { font-size: 0.7rem; }
+      }
+      @media (min-width: 801px) and (max-height: 740px) {
+        .slide { padding-top: 5.25rem; padding-bottom: 5.75rem; }
+        .project-card { padding: 0.75rem; }
+        .project-card .client-logo { height: 52px; margin-bottom: 0.6rem; }
+        .client-logo img { max-height: 48px; }
+        .proof-content > h2 { margin-bottom: 0.9rem; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      }
+      @media (max-width: 550px) {
+        .slide--proof { align-content: start; }
+        .projects-grid { grid-template-columns: 1fr; }
+        .workshop-proof { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
+        .brand img { width: 6.5rem; }
+        .controls { grid-template-columns: 1fr auto; gap: 0.2rem; }
+        .progress { grid-column: 1 / -1; grid-row: 2; }
+        .slide { padding-bottom: 8rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="presentation" aria-label="Présentation Realsync">
+      <header class="topbar">
+        <div class="brand">
+          <img src="./assets/logo-white.svg" alt="Realsync" width="1150" height="300">
+          <span class="brand-label">Partenaire IA</span>
+        </div>
+      </header>
+
+      <section class="slide slide--opening is-active" data-title="Ouverture" aria-hidden="false">
+        <div class="copy">
+          <h1>Votre équipe perd-elle du temps sur des tâches répétitives?</h1>
+          <p class="lede">Nous intégrons l’IA dans vos processus</p>
+        </div>
+      </section>
+
+      <section class="slide slide--proof" data-title="Projets et formation" aria-hidden="true">
+        <div class="proof-content">
+          <h2>Déjà aux côtés d’entreprises d’ici.</h2>
+          <div class="projects-grid">
+            <article class="project-card">
+              <div class="client-logo"><img src="./assets/logo-cameleon.avif" alt="Peintures Caméléon"></div>
+              <button class="screenshot-button" type="button" data-preview="./assets/interface-cameleon.png" data-preview-title="Exemple d’interface · Gestion des tâches — Peintures Caméléon" aria-label="Agrandir l’interface Peintures Caméléon">
+                <img class="case-screenshot" src="./assets/interface-cameleon.png" alt="Exemple d’interface · Gestion des tâches" width="2880" height="1620">
+                <span class="enlarge-label" aria-hidden="true">Agrandir ↗</span>
+              </button>
+              <p class="project-benefit">L’IA crée les bons de travail. L’équipe est gérée dans le même système. Partenaire technologique de leur équipe TI.</p>
+              <p class="project-gain"><strong>≈ 1 820 h / an</strong></p>
+            </article>
+            <article class="project-card">
+              <div class="client-logo"><img src="./assets/logo-rmb.webp" alt="Groupe RMB"></div>
+              <button class="screenshot-button" type="button" data-preview="./assets/interface-rmb.png" data-preview-title="Exemple d’interface · Dossiers et suivis — Groupe RMB" aria-label="Agrandir l’interface Groupe RMB">
+                <img class="case-screenshot" src="./assets/interface-rmb.png" alt="Exemple d’interface · Dossiers et suivis" width="2880" height="1620">
+                <span class="enlarge-label" aria-hidden="true">Agrandir ↗</span>
+              </button>
+              <p class="project-benefit">Relances automatiques et dossiers annuels recréés sans intervention.</p>
+              <p class="project-gain"><strong>≈ 1 040 h / an</strong></p>
+            </article>
+            <article class="project-card">
+              <div class="client-logo"><img src="./assets/logo-joly.png" alt="Les Confections Joly"></div>
+              <button class="screenshot-button" type="button" data-preview="./assets/interface-joly.png" data-preview-title="Exemple d’interface · Soumissions — Les Confections Joly" aria-label="Agrandir l’interface Les Confections Joly">
+                <img class="case-screenshot" src="./assets/interface-joly.png" alt="Exemple d’interface · Soumissions" width="2880" height="1620">
+                <span class="enlarge-label" aria-hidden="true">Agrandir ↗</span>
+              </button>
+              <p class="project-benefit">Prix fournisseurs à jour et outil de soumission sur mesure.</p>
+              <p class="project-gain"><strong>≈ 520 h / an</strong></p>
+            </article>
+          </div>
+          <div class="workshop-proof">
+            <p><strong>Une cohorte en cours, avec plusieurs entreprises de la région.</strong><span>En collaboration avec</span></p>
+            <div class="partner-logos">
+              <img src="./assets/logo-cae.png" alt="Chaudière-Appalaches Économique">
+              <img src="./assets/logo-mrc.png" alt="MRC de Lotbinière">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide slide--opening" data-title="Comment Realsync travaille" aria-hidden="true">
+        <div class="copy">
+          <h2>Une tâche répétitive suffit pour commencer.</h2>
+          <div class="process" aria-label="Étapes de réalisation">
+            <div class="process-step">
+              <span class="process-number">01</span>
+              <svg class="process-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/><path d="M8 10h8M8 14h5"/></svg>
+              <strong>On regarde vos besoins.</strong>
+            </div>
+            <div class="process-step">
+              <span class="process-number">02</span>
+              <svg class="process-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6V4a2 2 0 0 1 4 0v2h5a2 2 0 0 1 2 2v3h-2a2 2 0 0 0 0 4h2v4a2 2 0 0 1-2 2h-5v-2a2 2 0 0 0-4 0v2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg>
+              <strong>On choisit la bonne solution.</strong>
+            </div>
+            <div class="process-step">
+              <span class="process-number">03</span>
+              <svg class="process-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+              <strong>Vous validez chaque étape.</strong>
+            </div>
+          </div>
+          <p class="human-note">Un développeur dédié qui connaît votre entreprise.</p>
+        </div>
+      </section>
+
+      <section class="slide slide--booking" data-title="Rencontrer Jérémie" aria-hidden="true">
+        <div class="copy">
+          <p class="eyebrow">15 minutes avec Jérémie</p>
+          <h2>Identifions une première tâche à simplifier.</h2>
+          <p class="lede">On repère ce qui vous ralentit et par où commencer.</p>
+        </div>
+        <form class="questionnaire" data-questionnaire>
+          <fieldset>
+            <legend>Quels problèmes vivez-vous en ce moment?</legend>
+            <div class="choices">
+              <label class="choice"><input type="checkbox" name="problems" value="On recopie les mêmes infos"><span>On recopie les mêmes infos</span></label>
+              <label class="choice"><input type="checkbox" name="problems" value="Les suivis se perdent"><span>Les suivis se perdent</span></label>
+              <label class="choice"><input type="checkbox" name="problems" value="L’info est difficile à retrouver"><span>L’info est difficile à retrouver</span></label>
+              <label class="choice"><input type="checkbox" name="problems" value="Les soumissions prennent trop de temps"><span>Les soumissions prennent trop de temps</span></label>
+              <label class="choice"><input type="checkbox" name="problems" value="On fait trop d’erreurs"><span>On fait trop d’erreurs</span></label>
+              <label class="choice"><input type="checkbox" name="problems" value="On ne sait pas où en sont les dossiers"><span>On ne sait pas où en sont les dossiers</span></label>
+              <label class="choice"><input type="checkbox" name="problems" value="Nos outils ne se parlent pas"><span>Nos outils ne se parlent pas</span></label>
+              <label class="choice"><input type="checkbox" name="problems" value="Tout repose sur une seule personne"><span>Tout repose sur une seule personne</span></label>
+            </div>
+          </fieldset>
+          <a class="primary-link" data-booking href="https://cal.com/je-bert?duration=15" target="_blank" rel="noopener noreferrer"><span class="jeremie-avatar" aria-hidden="true"><img src="./assets/jeremie-realsync.jpg" alt=""></span><span>Réserver 15 min avec Jérémie</span> <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M14 6l6 6-6 6"/></svg><span class="sr-only"> — nouvel onglet</span></a>
+        </form>
+      </section>
+
+      <footer class="controls" aria-label="Navigation de la présentation">
+        <span class="screen-count"><span data-screen-number>1</span> / <span data-total-screens>4</span></span>
+        <div class="progress" aria-label="Progression">
+          <button class="progress-step is-active" type="button" aria-label="Aller à l’écran 1" aria-current="step"></button>
+          <button class="progress-step" type="button" aria-label="Aller à l’écran 2"></button>
+          <button class="progress-step" type="button" aria-label="Aller à l’écran 3"></button>
+          <button class="progress-step" type="button" aria-label="Aller à l’écran 4"></button>
+        </div>
+        <div class="navigation">
+          <button class="nav-button" type="button" data-previous aria-label="Écran précédent" disabled><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 12H6M10 6l-6 6 6 6"/></svg></button>
+          <button class="nav-button" type="button" data-next aria-label="Écran suivant"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M14 6l6 6-6 6"/></svg></button>
+        </div>
+      </footer>
+      <p class="sr-only" data-live-status aria-live="polite"></p>
+    </main>
+    <dialog class="preview-dialog" data-preview-dialog aria-label="Interface agrandie">
+      <button class="preview-dismiss" type="button" aria-label="Fermer l’image agrandie">
+        <img data-preview-image alt="">
+      </button>
+    </dialog>
+    <script defer src="./presentation.js"></script>
+    <script defer src="./pwa.js"></script>
+  </body>
+</html>
